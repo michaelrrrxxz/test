@@ -67,7 +67,7 @@
 
 <body>
 {{-- @php
-    $studentName= "michael";   
+    $studentName= "michael";
     $studentId= "michael";
     $course= "michael";
 @endphp --}}
@@ -137,12 +137,18 @@
                     </div>
 
                     <!-- School Select -->
-                    <div class="form-group">
-                        <label for="schoolSelect">High School Name</label>
-                        <select class="form-control" name="school_id" id="schoolSelect" required>
-                            <option value="">Select a school</option>
-                        </select>
-                    </div>
+
+                 <div class="form-group">
+                    <label for="school">Senior Highschool School</label>
+                    <input type="text" name="school" id="school" class="form-control" list="schoolList">
+                    <datalist id="schoolList">
+                        @foreach($schools as $school)
+                            <option value="{{ $school->school_name }}">
+                        @endforeach
+                    </datalist>
+                </div>
+
+
 
                     <div class="form-group">
                         <label for="">Group</label>

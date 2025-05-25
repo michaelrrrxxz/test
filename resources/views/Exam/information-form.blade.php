@@ -1,6 +1,6 @@
 @extends('layouts.information')
 @section('default')
-    
+
 
 <div class="col-12 content-card">
 
@@ -10,7 +10,7 @@
         <div class="card-body">
             <div class="form-group">
                 <label for="address">Address</label>
-            
+
                     <input type="hidden" name="student_id" value=" $studentId">
 
                 <input type="text" class="form-control @error('address') is-invalid @enderror" id="address" name="address" placeholder="Enter address">
@@ -25,7 +25,7 @@
             <button type="submit" class="btn btn-primary">Submit</button>
         </div>
     </form>
- 
+
 </div>
 
 

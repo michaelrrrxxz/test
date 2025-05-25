@@ -9,7 +9,7 @@ $(function () {
 
     $('#add').on('click', function (e) {
         e.preventDefault();
-    
+
         // Make an AJAX request to check the total number of questions
         $.ajax({
             url: 'Batch/checkActiveBatch', // URL where you check the total questions (create a route in Laravel)
@@ -21,7 +21,7 @@ $(function () {
                     // If the total number of questions is 72 or more, show an error notification
                     toastr.error('Cannot add a new batch. An active batch already exists.', 'Error');
                 } else {
-                 
+
                 }
             },
             error: function () {
@@ -31,17 +31,17 @@ $(function () {
                    $('#batch-form')[0].reset();
                    $('#status').attr('hidden', 'hidden');
                    $('#statusLabel').attr('hidden', 'hidden');
-                   $('#id').val(''); 
+                   $('#id').val('');
                    $('#batch-modal').modal('show');
-              
+
             }
         });
     });
 
     // Show the 'Add User' modal
     $('#add').on('click', function (e) {
-      
-       
+
+
     });
 
     // Show the 'Edit User' modal and populate it with existing data
@@ -68,32 +68,32 @@ $(function () {
             }
         })
         .fail(function (jqXHR, textStatus, errorThrown) {
-            toastr.error(errorThrown, 'Error'); 
+            toastr.error(errorThrown, 'Error');
         });
     });
 
 
-  
+
 
     $('#batch-table').on('click', '.view', function (e) {
         e.preventDefault();
         var batchId = $(this).data('id');
-    
+
         $.ajax({
             url: 'Batch/getStudentsByBatch/' + batchId,
             dataType: 'json',
             success: function (response) {
                 console.log("AJAX response:", response); // Log the entire response for inspection
-    
+
                 if (response.data && response.data.length > 0) {
                     $('.modal-title').html('View Batch');
                     $('.card-title').html(response.batch_name);
                     $('#desbatch').html('Batch description: ' + response.batch_name);
-    
+
                     if ($.fn.DataTable.isDataTable('#students-table')) {
                         $('#students-table').DataTable().clear().destroy();
                     }
-    
+
                     $('#students-table').DataTable({
                         "ajax": {
                             "url": 'Batch/getStudentsByBatch/' + batchId,
@@ -135,7 +135,7 @@ $(function () {
                         ],
                         dom: 'Bfrtip'
                     });
-    
+
                     $('#getStudentbyBatch-modal').modal('show');
                 } else {
                     toastr.error('No students found in this batch.', 'Error!');
@@ -147,8 +147,8 @@ $(function () {
             }
         });
     });
-    
-    
+
+
 
 
     // Generate QR code for user
@@ -173,8 +173,8 @@ $(function () {
 
                 var qrcode = new QRCode(document.getElementById("qrcode"), {
                     text: userDataString,
-                    width: 250, 
-                    height: 250  
+                    width: 250,
+                    height: 250
                 });
 
                 $('#batch-modal').modal('show');
@@ -193,18 +193,18 @@ $(function () {
 
     $('#batch-form').on('submit', function (e) {
         e.preventDefault();
-    
+
         var fd = new FormData(this);
         fd.append('_token', $('meta[name="csrf-token"]').attr('content'));
         var id = $('#id').val();
         var url;
-    
+
         if (id != '') {
             url = 'Batch/update/' + id;
         } else {
             url = 'Batch/add';
         }
-    
+
         $.ajax({
             processData: false,
             contentType: false,
@@ -232,10 +232,10 @@ $(function () {
                 toastr.error('Something went wrong. Please try again!', 'Error');
             }
         });
-        
-        
+
+
     });
-    
+
     $('#batch-table').on('click', '.assign', function (e) {
         e.preventDefault();
         var id = $(this).data('id');
@@ -271,7 +271,7 @@ $(function () {
 
 
 
-    
+
 
 
     // Handle delete user operation
@@ -324,7 +324,7 @@ $('#batch-table').on('click', '.print', function (e) {
                 printContent += '<p><strong>Batch Name:</strong> ' + response.batch_name + '</p>';
                 printContent += '<p><strong>Batch ID:</strong> ' + response.description + '</p>';
                 printContent += '<table border="1" cellspacing="0" cellpadding="5" width="100%">';
-            
+
                 // Correct the header row
                 printContent += '<tr>';
                 printContent += '<th>ID No.</th>';
@@ -349,7 +349,7 @@ $('#batch-table').on('click', '.print', function (e) {
                 printContent += '<th>PC FR</th>';
                 printContent += '<th>NV Score</th>';
                 printContent += '</tr>';
-            
+
                 // Loop through the data to add each student row
                 response.data.forEach(function(student) {
                     printContent += '<tr>';
@@ -375,18 +375,18 @@ $('#batch-table').on('click', '.print', function (e) {
                     printContent += '<td>' + student.rsc2pc_fr + '</td>';
                     printContent += '<td><strong>' + student.non_verbal_score + '</strong></td>';
                     printContent += '</tr>';
-                }); 
+                });
                 printContent += '</table>';
                 var imageUrl = "{{ asset('img/header-logo.png') }}";
 
                 // Open a new window and print the content
                 var printWindow = window.open('', '_blank');
                 printWindow.document.write('<html><head><title>Print Batch: ' + response.batch_name + '</title></head><body>');
-                printWindow.document.write('<img src="' + imageUrl + '" alt="Header Logo"></img>'); // Corrected img tag
+              
                 printWindow.document.write(printContent);
                 printWindow.document.write('</body></html>');
                 printWindow.document.close();
-                
+
                 // Wait for content to load before printing
                 printWindow.onload = function() {
                     printWindow.print();
@@ -423,7 +423,7 @@ $('#printall').on('click', function (e) {
                             <h3>Batch Information</h3>
                             <p><strong>Batch Name:</strong> ${batch.batch_name}</p>
                             <p><strong>Description:</strong> ${batch.description}</p>
-                        
+
                             <table border="1" cellspacing="0" cellpadding="5" width="100%">
                                 <tr>
                                     <th>ID No.</th>
@@ -530,14 +530,14 @@ $('#printall').on('click', function (e) {
                     name: "status",
                     render: function (data, type, row) {
                         if (data === 'locked') {
-                          
+
                             return '<a href="" class="status" data-toggle="tooltip" ' +
                             'data-placement="bottom" title="Edit User" data-id="' + data.id + '" ><span class="text-danger"><i class="fas fa-lock"></i> Locked</span></a>';
                         } else if (data === 'active') {
-                           
+
                             return '<span class="text-success"><i class="fas fa-check-circle"></i> Active</span>';
                         } else {
-                            
+
                             return '<span class="text-secondary"><i class="fas fa-question-circle"></i> Unknown</span>';
                         }
                     }
@@ -552,9 +552,9 @@ $('#printall').on('click', function (e) {
                     }
                 },
                 {
-                    
+
                     data: null, render: function (data) {
-                      
+
                         var option = '<a href="" class="print" data-toggle="tooltip" ' +
                         'data-placement="bottom" title="Print Batch" data-id="' + data.id + '">' +
                         '<i class="fa fas fa-print text-secondary"></i></a> |'  +
@@ -564,7 +564,7 @@ $('#printall').on('click', function (e) {
                         '<a href="" class="view" data-toggle="tooltip" ' +
                         'data-placement="bottom" title="View Batch" data-id="' + data.id + '">' +
                         '<i class="fa fas fa-eye text-primary"></i></a>';
-                    
+
                         return option;
                     }
                 }
@@ -610,21 +610,21 @@ function getResults() {
         },
         "columns": [
             {data : "id_number"},
-            { 
+            {
                 data: "name",
                 createdCell: function (td, cellData, rowData, row, col) {
-                   
+
                     tippy(td, {
                         content: `<div class="tooltip-bg">
-                        
+
                         <div class="tooltip-content">
                             <strong>ID Number: </strong>${rowData.id_number} <br>
                             <strong>Name:</strong> ${cellData} <br>
                             <strong>Course:</strong> ${rowData.course} <br>
                             <strong>Age:</strong> ${rowData.age_year} <br>
                             <strong>Address:</strong> ${rowData.address} <br>
-                            <strong>Batch:</strong> ${rowData.batch} 
-                            <strong>Group:</strong> ${rowData.group_abc} 
+                            <strong>Batch:</strong> ${rowData.batch}
+                            <strong>Group:</strong> ${rowData.group_abc}
                         </div>
                       </div>`,
                         theme: 'light',  // Use a predefined or custom theme
@@ -636,11 +636,11 @@ function getResults() {
                     });
                 }
             },
-            
+
             { data: "course"},
             { data: "raw_score_t",
                 render: function(data, type, row) {
-                    return '<strong>' + data + '</strong>'; 
+                    return '<strong>' + data + '</strong>';
                 }
             },
             { data: "sai_t"},
@@ -651,12 +651,12 @@ function getResults() {
             { data: "verbalComprehension_score"},
             { data: "rsc2pc_vc"},
             { data: "verbalReasoning_score"},
-           
+
             { data:"rsc2pc_vr"
             },
             { data: "verbal_score",
                 render: function(data, type, row) {
-                    return '<strong>' + data + '</strong>'; 
+                    return '<strong>' + data + '</strong>';
                 }
             },
             { data: "quantitativeReasoning_score"},
@@ -665,7 +665,7 @@ function getResults() {
             { data: "rsc2pc_fr"},
             { data: "non_verbal_score",
                 render: function(data, type, row) {
-                    return '<strong>' + data + '</strong>'; 
+                    return '<strong>' + data + '</strong>';
                 }
              },
         ]

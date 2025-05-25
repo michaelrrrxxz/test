@@ -5,7 +5,7 @@ $.ajaxSetup({
 });
 
 $(function () {
-    
+
     getEnrolledStudents();
 
     var currentYear = new Date().getFullYear();
@@ -14,14 +14,14 @@ $(function () {
     $('#upload').on('click', function (e) {
         e.preventDefault();
         $('.modal-title').html('Upload Enrolled Students');
-        $('#id').val(''); 
+        $('#id').val('');
         $('#upload-modal').modal('show');
     });
 
     $('#add').on('click', function (e) {
         e.preventDefault();
         $('.modal-title').html('Add Enrolled Students');
-        $('#id').val(''); 
+        $('#id').val('');
         $('#enrolledstudents-modal').modal('show');
     });
 
@@ -75,9 +75,9 @@ $(function () {
 
     $('#add-enrolledstudents-form').on('submit', function(event) {
         event.preventDefault();
-    
+
         var formData = new FormData(this);
-        
+
         $.ajax({
             url: 'EnrolledStudents/add',
             type: 'POST',
@@ -88,35 +88,45 @@ $(function () {
                 // Success logic
                 getEnrolledStudents();
                 $('#enrolledstudents-modal').modal('hide');
-                
+
                 // Toastr success notification
                 toastr.success(response.message, 'Success!');
-            
+
                 document.getElementById('enrolledstudents-form').reset();
             },
             error: function(result) {
-              
+
                 if (result.status === 422) {
                     var errors = result.responseJSON.errors;
-                    
-                  
+
+
                     $.each(errors, function(field, messages) {
-                       
+
                         toastr.error(messages.join(', '), 'Validation Error');
                     });
                 } else {
-                   
+
                     toastr.error('An error occurred. Please try again.', 'Error!');
                 }
             }
         });
     });
-    
+
     $('#enrolledstudents-form').on('submit', function(event) {
         event.preventDefault();
 
         var formData = new FormData(this);
-        
+
+        // Show Swal loading
+        Swal.fire({
+            title: 'Uploading...',
+            text: 'Please wait while we process the data.',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
         $.ajax({
             url: 'EnrolledStudents/upload',
             type: 'POST',
@@ -124,8 +134,10 @@ $(function () {
             contentType: false,
             processData: false,
             success: function(response) {
-                let insertedCount = response.inserted_count; // Get the number of inserted students from the response
-            
+                Swal.close(); // Close the loading alert
+
+                let insertedCount = response.inserted_count;
+
                 Swal.fire({
                     title: `Are you sure?`,
                     text: `You are about to insert ${insertedCount} students.`,
@@ -137,33 +149,26 @@ $(function () {
                     cancelButtonText: 'Cancel',
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        // Proceed with actions after confirmation
                         getEnrolledStudents();
                         $('#upload-modal').modal('hide');
-            
-                        // Show Toastr success notification after confirmation
+
                         toastr.success(`${insertedCount} students have been successfully inserted.`, 'Success!');
-            
                         document.getElementById('enrolledstudents-form').reset();
-            
-                     
                     } else {
-                        // Optional: Notify the user about the cancellation
                         toastr.info('Operation cancelled.', 'Cancelled');
                     }
                 });
             },
             error: function(result) {
-                // Toastr error notification
+                Swal.close(); // Close the loading alert on error
                 toastr.error('An error occurred. Please try again.', 'Error!');
             }
-            
         });
-              
-        })
-    
-	
-    
+    });
+
+
+
+
 
 
     // Handle delete user operation
@@ -219,9 +224,9 @@ $(function () {
                 { data: "course" },
                 { data: "department" },
                 { data: "name" },
-                { 
-                    data: "gender", 
-                    title: "Gender", 
+                {
+                    data: "gender",
+                    title: "Gender",
                     render: function (data, type, row) {
                         return formatGender(data);
                     }
@@ -241,7 +246,7 @@ $(function () {
         $("#year-filter").change(function() {
             getEnrolledStudents(); // Fetch batches with the selected year
         });
-        
+
     $('#course-filter-enrolled').on('keyup change', function() {
         // Get the value of the input field
         var filterValue = $(this).val();
@@ -256,21 +261,21 @@ $(function () {
     });
 
     }
-    
+
 
 
     $(document).ready(function() {
         // Call the function when the document is ready
         getEnrolledStudents();
     });
-    
+
 });
 
 
 function formatGender(gender) {
     switch (gender) {
         case 'M':
-            return 'Male'; 
+            return 'Male';
         case 'F':
             return 'Female';
         default:

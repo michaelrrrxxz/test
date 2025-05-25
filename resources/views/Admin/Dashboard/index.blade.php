@@ -187,63 +187,6 @@
             </div>
         </div>
     </div>
-    <!-- Main Row: Ongoing Exams and Logs Table -->
-
-        <!-- Left Column: Ongoing Exams and Logs Table -->
-        <div class="col-md-6">
-            <!-- Ongoing Exams Card -->
-            <div class="card mb-4">
-                <div class="card-header text-white">
-                    <h3 class="card-title">Ongoing Exams</h3>
-                </div>
-                <div class="card-body">
-                    <table id="taking" class="table table-striped table-bordered">
-                        <thead>
-                            <tr>
-                                <th>Student Name</th>
-                                <th>Id Number</th>
-                                <th>Exam Start Time</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach ($ongoingExams as $exam)
-                                <tr>
-                                    <td>{{ $exam->student->name ?? 'Unknown' }}</td>
-                                    <td>{{ $exam->student->id_number }}</td>
-                                    <td>{{ $exam->start_time }}</td>
-                                </tr>
-                           @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-
-        </div>
-
-
-        <div class="col-lg-6 col-md-12 mb-5">
-            <div class="card mb-4">
-                <div class="card-header text-white">
-                    <h3 class="card-title">Activity Logs</h3>
-                </div>
-                <div class="card-body">
-                    <table id="logs" class="table table-striped table-bordered">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Action</th>
-                                <th>Description</th>
-                                <th>Date</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
 
 </div>
 

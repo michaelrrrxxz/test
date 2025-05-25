@@ -17,7 +17,7 @@
 
 
 
-             
+
                 <a href="#" class="d-block">
                     @if(Auth::check())
                         Welcome,<br> {{ Auth::user()->username }}
@@ -85,19 +85,19 @@
                         </li>
 
                         <li class="nav-header">SETTINGS</li>
-                        <li class="nav-item">
+                        {{-- <li class="nav-item">
                             <a href="{{ route('Courses') }}" class="nav-link {{ request()->is('Courses') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-book"></i>
                                 <p>Courses List</p>
                             </a>
-                        </li>
+                        </li> --}}
 
-                        <li class="nav-item">
+                        {{-- <li class="nav-item">
                             <a href="{{ route('Departments') }}" class="nav-link {{ request()->is('Departments') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-building"></i>
                                 <p>Departments List</p>
                             </a>
-                        </li>
+                        </li> --}}
 
                         <li class="nav-item">
                             <a href="{{ route('EnrolledStudents') }}" class="nav-link {{ request()->is('EnrolledStudents') ? 'active' : '' }}">

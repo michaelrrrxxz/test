@@ -16,9 +16,9 @@ class Information extends Model
         'region_id',
         'city_id',
         'province_id',
-        'school_id',
+        'school',
         'group_abc'
-        
+
     ];
     use HasFactory;
 
