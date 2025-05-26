@@ -35,21 +35,68 @@
     #results-table td, #results-table th {
         padding: 8px;
     }
+     .legend-container {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 16px;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-color {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .legend-above {
+            background: #048e2b;
+        }
+
+        .legend-average {
+            background: #ffcc00;
+        }
+
+        .legend-below {
+            background: #d9534f;
+        }
 </style>
 
 <div class="container centered-container">
     <div class="result-card">
+                    <div class="legend-container">
+                <div class="legend-item">
+                    <span class="legend-color legend-above"></span>
+                    <span>AA</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color legend-average"></span>
+                    <span>A</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color legend-below"></span>
+                    <span>BA</span>
+                </div>
+            </div>
         <div class="box box-success">
             <div class="box-header with-border">
                 <h3 class="box-title text-center">Your Results</h3>
                 @foreach ($formattedResults as $result)
                     <h3 class="box-title text-center">
-                        {{ $result['raw_score_t'] }} 
+                        {{ $result['raw_score_t'] }}
                         <span style="font-weight: normal; font-size: 16px;">/ 72</span>
                     </h3>
                 @endforeach
             </div>
-            
+
             <div class="box-body">
                 <!-- Chart at the top -->
                 <div id="chart" class="my-4"></div>
@@ -92,7 +139,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                       
+
                         @foreach ($formattedResults as $result)
                             <tr>
                                 <td>{{ $result['id_number'] }}</td>
