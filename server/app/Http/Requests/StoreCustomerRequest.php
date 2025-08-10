@@ -26,7 +26,7 @@ class StoreCustomerRequest extends FormRequest
             'date_of_birth' => 'required|date',
             'address' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:customers,email',
-            'contact_number' => 'required|string|max:15',
+            'contact_number' => 'required|string|max:15|unique:customers,contact_number',
         ];
     }
 }

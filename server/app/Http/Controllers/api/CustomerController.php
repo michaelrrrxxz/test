@@ -10,53 +10,50 @@ use Illuminate\Http\Request;
 
 class CustomerController extends Controller
 {
+public function checkNumber(Request $request)
+{
+    $number = $request->input('number');
+    $exists = Customer::where('contact_number', $number)->exists();
+
+    return response()->json([
+        'exists' => $exists,
+        'message' => $exists ? 'Contact number already exists' : 'Contact number is available'
+    ], $exists ? 200 : 200);
+}
+
+public function checkEmail(Request $request)
+{
+    $email = $request->input('email');
+    $exists = Customer::where('email', $email)->exists();
+
+    return response()->json([
+        'exists' => $exists,
+        'message' => $exists ? 'Email already exists' : 'Email is available'
+    ], $exists ? 200 : 200);
+}
     /**
      * Display a listing of the resource.
+     *
+     *
      */
-        public function index(Request $request)
-        {
-            $limit = $request->input('limit', 10);
+public function index()
+{
+    $customers = Customer::select(
+        'id',
+        'name',
+        'date_of_birth',
+        'address',
+        'email',
+        'contact_number'
+    )->get();
 
-            $sort = $request->input('sort', 'asc');
-            if (!in_array($sort, ['asc', 'desc'])) {
-                $sort = 'asc';
-            }
+    return response()->json([
+        'status' => 200,
+        'message' => 'Customers retrieved successfully',
+        'data' => $customers
+    ]);
+}
 
-            $customers = Customer::select(
-                'id',
-                'name',
-                'date_of_birth',
-                'address',
-                'email',
-                'contact_number'
-            )
-            ->orderBy('name',$sort)
-            ->paginate($limit);
-
-            $customers->getCollection()->transform(function ($customer) {
-                return [
-                    'id' => $customer->id,
-                    'name' => $customer->name,
-                    'date_of_birth' => $customer->date_of_birth,
-                    'address' => $customer->address,
-                    'email' => $customer->email,
-                    'contact_number' => $customer->contact_number,
-                ];
-            });
-
-            return response()->json([
-
-                'status' => 200,
-                'message' => 'Customers retrieved successfully',
-                'data' => $customers->items(),
-                'pagination' => [
-                    'current_page' => $customers->currentPage(),
-                    'last_page' => $customers->lastPage(),
-                    'per_page' => $customers->perPage(),
-                    'total' => $customers->total(),
-                ],
-            ]);
-        }
 
         /**
      * Show the form for creating a new resource.
