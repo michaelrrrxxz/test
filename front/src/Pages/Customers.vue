@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import api from '@/Api/Axios'
-
-import { Toaster } from '@/components/ui/sonner'
 import { toast } from 'vue-sonner'
+import { useRouter } from 'vue-router'
 import 'vue-sonner/style.css'
+
+import AppLayout from '@/layouts/AppLayout.vue'
+
+
 import {
   Dialog,
   DialogContent,
@@ -28,9 +31,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
-import { useRouter } from 'vue-router'
 
-const router = useRouter()
 
 interface Customer {
   id: number | string
@@ -40,10 +41,13 @@ interface Customer {
   date_of_birth: string
   address: string
   contact_number: string
-
 }
 
+const router = useRouter()
+
 const customers = ref<Customer[]>([])
+const searchQuery = ref('')
+const loading = ref(true)
 
 const isAddOpen = ref(false)
 const isEditOpen = ref(false)
@@ -56,7 +60,6 @@ const addForm = reactive({
   date_of_birth: '',
   address: '',
   contact_number: '',
-
   errors: {} as Record<string, string>,
   processing: false,
 })
@@ -72,70 +75,56 @@ const editForm = reactive({
   processing: false,
 })
 
-// Add this ref for the drawer state and selected customer
-const isViewQuotationsOpen = ref(false)
-const selectedCustomer = ref<Customer | null>(null)
+const filteredCustomers = computed(() => {
+  if (!searchQuery.value) return customers.value
+  return customers.value.filter(c =>
+    c.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+    c.email.toLowerCase().includes(searchQuery.value.toLowerCase())
+  )
+})
 
-// Fetch customers on mounted
 async function fetchCustomers() {
+  loading.value = true
   try {
     const response = await api.get('/customers')
-    customers.value = response.data.data // <== Here is the fix: get the array inside the response
+    customers.value = response.data.data // API wraps in .data
   } catch {
     toast.error('Failed to load customers')
+  } finally {
+    loading.value = false
   }
 }
 
-fetchCustomers()
+onMounted(fetchCustomers)
 
 function openAdd() {
-  addForm.name = ''
-  addForm.email = ''
-  addForm.phone = ''
-  addForm.errors = {}
-  addForm.processing = false
+  Object.assign(addForm, {
+    name: '', email: '', phone: '', date_of_birth: '', address: '', contact_number: '', errors: {}, processing: false
+  })
   isAddOpen.value = true
+}
+
+function openEdit(customer: Customer) {
+  editId.value = customer.id
+  Object.assign(editForm, { ...customer, errors: {}, processing: false })
+  isEditOpen.value = true
 }
 
 function openViewQuotations(customer: Customer) {
   router.push(`/quotations/${customer.id}`)
 }
 
-
-function openEdit(customer: Customer) {
-  editId.value = customer.id
-  editForm.name = customer.name
-  editForm.email = customer.email
-  editForm.phone = customer.phone
-  editForm.date_of_birth = customer.date_of_birth
-  editForm.address = customer.address
-  editForm.contact_number = customer.contact_number
-  editForm.errors = {}
-  editForm.processing = false
-  isEditOpen.value = true
-}
-
 async function submitAdd() {
   addForm.processing = true
   addForm.errors = {}
   try {
-    await api.post('/customers', {
-      name: addForm.name,
-      email: addForm.email,
-      phone: addForm.phone,
-      date_of_birth: addForm.date_of_birth,
-      address: addForm.address,
-      contact_number: addForm.contact_number,
-    })
+    await api.post('/customers', { ...addForm })
     toast.success('Customer created')
     isAddOpen.value = false
     await fetchCustomers()
   } catch (error: any) {
-    if (error.response?.data?.errors) {
-      addForm.errors = error.response.data.errors
-    } else {
-      toast.error('Failed to create customer')
-    }
+    if (error.response?.data?.errors) addForm.errors = error.response.data.errors
+    else toast.error('Failed to create customer')
   } finally {
     addForm.processing = false
   }
@@ -146,25 +135,14 @@ async function submitEdit() {
   editForm.processing = true
   editForm.errors = {}
   try {
-    await api.put(`/customers/${editId.value}`, {
-      name: editForm.name,
-      email: editForm.email,
-      phone: editForm.phone,
-      date_of_birth: editForm.date_of_birth,
-      address: editForm.address,
-      contact_number: editForm.contact_number,
-
-    })
+    await api.put(`/customers/${editId.value}`, { ...editForm })
     toast.success('Customer updated')
     isEditOpen.value = false
     editId.value = null
     await fetchCustomers()
   } catch (error: any) {
-    if (error.response?.data?.errors) {
-      editForm.errors = error.response.data.errors
-    } else {
-      toast.error('Failed to update customer')
-    }
+    if (error.response?.data?.errors) editForm.errors = error.response.data.errors
+    else toast.error('Failed to update customer')
   } finally {
     editForm.processing = false
   }
@@ -189,54 +167,67 @@ function deleteCustomer(id: number | string) {
   })
 }
 </script>
-
-
 <template>
-  <Toaster position="bottom-right" closeButton />
+<AppLayout>
   <div class="p-2 max-w-6xl mx-auto">
     <div class="flex justify-between items-center mb-4">
       <h2 class="text-2xl font-semibold">Customers</h2>
-      <Button size="sm" variant="secondary" @click="openAdd">Add Customer</Button>
+      <div class="flex gap-2">
+        <input v-model="searchQuery" type="text" placeholder="Search by name or email"
+               class="border rounded px-2 py-1 text-sm" />
+        <Button size="sm" variant="secondary" @click="openAdd">Add Customer</Button>
+      </div>
     </div>
 
-    <Table class="w-full table-fixed">
-      <TableHeader>
-        <TableRow>
-          <TableHead class="w-1/5 px-4 py-2">Name</TableHead>
-          <TableHead class="w-1/5 px-4 py-2">Email</TableHead>
-          <TableHead class="w-1/5 px-4 py-2">DOB</TableHead>
-          <TableHead class="w-1/5 px-4 py-2">Address</TableHead>
-          <TableHead class="w-1/5 px-4 py-2">Contact</TableHead>
-          <TableHead class="w-1/6 px-4 py-2">Actions</TableHead>
-        </TableRow>
-      </TableHeader>
+<Table class="w-full table-fixed">
+  <TableHeader>
+    <TableRow>
+      <TableHead class="w-[20%]">Name</TableHead>
+      <TableHead class="w-[25%]">Email</TableHead>
+      <TableHead class="w-[25%]">Address</TableHead>
+      <TableHead class="w-[15%]">Contact</TableHead>
+      <TableHead class="w-[15%]">Actions</TableHead>
+    </TableRow>
+  </TableHeader>
 
-      <TableBody v-if="customers.length">
-        <TableRow v-for="customer in customers" :key="customer.id" class="hover:bg-gray-50">
-          <TableCell class="px-4 py-2 font-medium truncate">{{ customer.name }}</TableCell>
-          <TableCell class="px-4 py-2 truncate">{{ customer.email }}</TableCell>
-          <TableCell class="px-4 py-2 truncate">{{ customer.date_of_birth }}</TableCell>
-          <TableCell class="px-4 py-2 truncate">{{ customer.address }}</TableCell>
-          <TableCell class="px-4 py-2 truncate">{{ customer.contact_number }}</TableCell>
-          <TableCell class="px-4 py-2 space-x-2">
-            <Button size="sm" variant="secondary" @click="openViewQuotations(customer)">View Quotations</Button>
-            <Button size="sm" variant="outline" @click="openEdit(customer)">Edit</Button>
-            <Button size="sm" variant="destructive" @click="deleteCustomer(customer.id)">Delete</Button>
-          </TableCell>
-        </TableRow>
-      </TableBody>
+  <!-- Skeleton loader -->
+  <TableBody v-if="loading">
+    <TableRow v-for="n in 5" :key="n">
+      <TableCell colspan="6" class="animate-pulse py-3">
+        <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+      </TableCell>
+    </TableRow>
+  </TableBody>
 
-      <TableBody v-else>
-        <TableRow>
-          <TableCell :colSpan="6" class="text-center py-6 text-gray-500">
-            No customers found.
-          </TableCell>
-        </TableRow>
-      </TableBody>
-    </Table>
+  <TableBody v-else-if="filteredCustomers.length">
+    <TableRow
+      v-for="customer in filteredCustomers"
+      :key="customer.id"
+      class="hover:bg-gray-50"
+    >
+      <TableCell class="truncate">{{ customer.name }}</TableCell>
+      <TableCell class="truncate">{{ customer.email }}</TableCell>
+      <TableCell class="truncate">{{ customer.address }}</TableCell>
+      <TableCell class="truncate">{{ customer.contact_number }}</TableCell>
+      <TableCell class="space-x-2">
+        <Button size="sm" variant="secondary" @click="openViewQuotations(customer)">View Quotations</Button>
+        <Button size="sm" variant="outline" @click="openEdit(customer)">Edit</Button>
+        <Button size="sm" variant="destructive" @click="deleteCustomer(customer.id)">Delete</Button>
+      </TableCell>
+    </TableRow>
+  </TableBody>
 
-    <!-- Add Drawer -->
-    <Drawer v-model:open="isAddOpen">
+  <TableBody v-else>
+    <TableRow>
+      <TableCell :colSpan="6" class="text-center py-6 text-gray-500">
+        No customers found.
+      </TableCell>
+    </TableRow>
+  </TableBody>
+</Table>
+
+
+   <Drawer v-model:open="isAddOpen">
       <DrawerContent>
         <DrawerHeader>
           <DrawerTitle>Add Customer</DrawerTitle>
@@ -340,4 +331,5 @@ function deleteCustomer(id: number | string) {
 
  
   </div>
+</AppLayout>
 </template>

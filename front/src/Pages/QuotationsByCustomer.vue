@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
 import api from '@/Api/Axios'
+import 'vue-sonner/style.css'
 import { toast } from 'vue-sonner'
+
 import {
   Drawer,
   DrawerContent,
@@ -12,7 +14,11 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { useRoute } from 'vue-router'
+import AppLayout from '@/layouts/AppLayout.vue'
+
+
 const route = useRoute()
 
 interface QuotationItem {
@@ -38,15 +44,45 @@ interface Customer {
   contact_number: string
 }
 
-
-
-
 const customerId = ref(route.params.customerId as string)
 const quotations = ref<Quotation[]>([])
 const customer = ref<Customer | null>(null)
 const loading = ref(false)
 
-// Fetch customer info and quotations
+// Search
+const searchQuery = ref('')
+
+// Drawer state
+const isAddOpen = ref(false)
+const isEditOpen = ref(false)
+
+// Form state (shared logic for add/edit)
+const form = reactive({
+  id: null as number | null,
+  quotation_date: '',
+  items: [] as QuotationItem[],
+  errors: {} as Record<string, any>,
+  processing: false,
+})
+
+// Computed totals
+const totalItems = computed(() => form.items.reduce((sum, i) => sum + i.quantity, 0))
+const grandTotal = computed(() =>
+  form.items.reduce((sum, i) => sum + i.quantity * i.unit_cost, 0)
+)
+
+// Filtered quotations
+const filteredQuotations = computed(() => {
+  if (!searchQuery.value.trim()) return quotations.value
+  const query = searchQuery.value.toLowerCase()
+  return quotations.value.filter(q =>
+    q.id.toString().includes(query) ||
+    q.quotation_date.toLowerCase().includes(query) ||
+    q.items.some(item => item.product_name.toLowerCase().includes(query))
+  )
+})
+
+// Fetch data
 async function fetchCustomerAndQuotations() {
   loading.value = true
   try {
@@ -54,8 +90,9 @@ async function fetchCustomerAndQuotations() {
       api.get(`/customers/${customerId.value}`),
       api.get(`/customers/${customerId.value}/quotations`)
     ])
-    customer.value = customerRes.data
+    customer.value = customerRes.data.data
     quotations.value = quotationsRes.data
+    console.log('Customer API response:', customerRes.data)
   } catch {
     toast.error('Failed to load customer or quotations')
   } finally {
@@ -65,87 +102,134 @@ async function fetchCustomerAndQuotations() {
 
 onMounted(fetchCustomerAndQuotations)
 
-// Add Quotation drawer state
-const isAddOpen = ref(false)
-
-// Form reactive state
-const addForm = reactive({
-  quotation_date: '',
-  items: [] as QuotationItem[],
-  errors: {} as Record<string, any>,
-  processing: false,
-})
-
-// Computed total items and grand total
-const totalItems = computed(() => addForm.items.reduce((sum, i) => sum + i.quantity, 0))
-const grandTotal = computed(() =>
-  addForm.items.reduce((sum, i) => sum + i.quantity * i.unit_cost, 0)
-)
-
-// Initialize form with one empty item
+// Form helpers
 function initForm() {
-  addForm.quotation_date = ''
-  addForm.items = [{ product_name: '', quantity: 1, unit_cost: 0 }]
-  addForm.errors = {}
+  form.id = null
+  form.quotation_date = ''
+  form.items = [{ product_name: '', quantity: 1, unit_cost: 0 }]
+  form.errors = {}
 }
-initForm()
 
 function addItem() {
-  addForm.items.push({ product_name: '', quantity: 1, unit_cost: 0 })
+  form.items.push({ product_name: '', quantity: 1, unit_cost: 0 })
 }
 
 function removeItem(index: number) {
-  if (addForm.items.length > 1) addForm.items.splice(index, 1)
+  if (form.items.length > 1) form.items.splice(index, 1)
 }
 
-// Submit new quotation
-async function submitAddQuotation() {
-  addForm.processing = true
-  addForm.errors = {}
+function openAddDrawer() {
+  initForm()
+  isAddOpen.value = true
+}
 
-  // Simple validation
-  if (!addForm.quotation_date) {
-    addForm.errors.quotation_date = 'Quotation date is required.'
+function openEditDrawer(quotation: Quotation) {
+  form.id = quotation.id
+  form.quotation_date = quotation.quotation_date
+  form.items = quotation.items.map(i => ({
+    product_name: i.product_name,
+    quantity: i.quantity,
+    unit_cost: i.unit_cost
+  }))
+  form.errors = {}
+  isEditOpen.value = true
+}
+
+// Validate form
+function validateForm() {
+  form.errors = {}
+  if (!form.quotation_date) {
+    form.errors.quotation_date = 'Quotation date is required.'
   }
-  addForm.items.forEach((item, i) => {
-    if (!item.product_name.trim()) addForm.errors[`items.${i}.product_name`] = 'Product name required.'
-    if (item.quantity < 1) addForm.errors[`items.${i}.quantity`] = 'Quantity must be at least 1.'
-    if (item.unit_cost < 0) addForm.errors[`items.${i}.unit_cost`] = 'Unit_cost must be >= 0.'
+  form.items.forEach((item, i) => {
+    if (!item.product_name.trim()) form.errors[`items.${i}.product_name`] = 'Product name required.'
+    if (item.quantity < 1) form.errors[`items.${i}.quantity`] = 'Quantity must be at least 1.'
+    if (item.unit_cost < 0) form.errors[`items.${i}.unit_cost`] = 'Unit cost must be >= 0.'
   })
+  return Object.keys(form.errors).length === 0
+}
 
-  if (Object.keys(addForm.errors).length > 0) {
-    addForm.processing = false
-    return
-  }
-
+// Add
+async function submitAdd() {
+  if (!validateForm()) return
+  form.processing = true
   try {
     await api.post(`/customers/${customerId.value}/quotations`, {
-      quotation_date: addForm.quotation_date,
+      quotation_date: form.quotation_date,
       customer_id: customerId.value,
       total_items: totalItems.value,
       grand_total: grandTotal.value,
-      items: addForm.items.map(i => ({
+      items: form.items.map(i => ({
         product_name: i.product_name,
         quantity: i.quantity,
         price: i.unit_cost,
       })),
     })
     toast.success('Quotation added')
+     await fetchCustomerAndQuotations()
     isAddOpen.value = false
-    await fetchCustomerAndQuotations()
-    initForm()
+ 
   } catch (error: any) {
     if (error.response?.data?.errors) {
-      addForm.errors = error.response.data.errors
+      form.errors = error.response.data.errors
     } else {
       toast.error('Failed to add quotation')
     }
   } finally {
-    addForm.processing = false
+    form.processing = false
   }
 }
 
-// Send quotation via email
+// Edit
+async function submitEdit() {
+  if (!validateForm()) return
+  form.processing = true
+  try {
+    await api.put(`/quotations/${form.id}`, {
+      quotation_date: form.quotation_date,
+      total_items: totalItems.value,
+      grand_total: grandTotal.value,
+      items: form.items.map(i => ({
+        product_name: i.product_name,
+        quantity: i.quantity,
+        price: i.unit_cost,
+      })),
+    })
+    toast.success('Quotation updated')
+    isEditOpen.value = false
+    await fetchCustomerAndQuotations()
+  } catch (error: any) {
+    if (error.response?.data?.errors) {
+      form.errors = error.response.data.errors
+    } else {
+      toast.error('Failed to update quotation')
+    }
+  } finally {
+    form.processing = false
+  }
+}
+
+// Delete
+function deleteQuotation(id: number | string) {
+  toast('Are you sure?', {
+    position: 'top-center',
+    description: 'This will permanently delete the quotation.',
+    action: {
+      label: 'Confirm',
+      onClick: async () => {
+        try {
+          await api.delete(`/quotations/${id}`)
+          toast.success('Quotation deleted')
+          await fetchCustomerAndQuotations()
+        } catch {
+          toast.error('Failed to delete quotation')
+        }
+      },
+    },
+  })
+}
+
+// Send email
 const sendingEmail = ref<number | null>(null)
 async function sendQuotationEmail(quotationId: number) {
   sendingEmail.value = quotationId
@@ -159,80 +243,101 @@ async function sendQuotationEmail(quotationId: number) {
   }
 }
 
-onMounted(async () => {
-  loading.value = true
-  try {
-    const res = await api.get(`/customers/${customerId.value}`)
-    customer.value = res.data.data
-  } catch (err) {
-    console.error(err)
-  } finally {
-    loading.value = false
-  }
-})
+
 </script>
 
 <template>
+<AppLayout>
   <div class="max-w-4xl mx-auto p-4">
+    <!-- Header -->
     <div class="flex justify-between items-center mb-4">
-      <h2 class="text-2xl font-semibold">Quotations for Customer #{{ customerId }}</h2>
-      <Button size="sm" @click="isAddOpen = true">Add Quotation</Button>
+      <h2 class="text-2xl font-semibold">Quotations of {{ customer?.name }}</h2>
+      <Button size="sm" @click="openAddDrawer">Add Quotation</Button>
     </div>
-<div v-if="loading">Loading...</div>
-<div v-else class="mb-6 p-4 bg-gray-50 rounded border">
-  <div class="font-bold text-lg mb-1">Customer Information</div>
-  <div><span class="font-semibold">Name:</span> {{ customer?.name || 'N/A' }}</div>
-  <div><span class="font-semibold">Email:</span> {{ customer?.email || 'N/A' }}</div>
-</div>
 
+    <!-- Search -->
+    <div class="mb-4">
+      <Input placeholder="Search quotations..." v-model="searchQuery" />
+    </div>
 
+    <!-- Loading Skeleton -->
+    <div v-if="loading" class="space-y-4">
+      <div v-for="n in 3" :key="n" class="animate-pulse bg-gray-200 h-24 rounded"></div>
+    </div>
 
-    <div v-if="loading" class="text-center py-6">Loading...</div>
+    <!-- Customer Info -->
+    <!-- <div v-else class="mb-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Customer Information</CardTitle>
+          <CardDescription>Details for this customer</CardDescription>
+        </CardHeader>
+        <CardContent class="space-y-2">
+          <p><span class="font-semibold">Name:</span> {{ customer?.name || 'N/A' }}</p>
+          <p><span class="font-semibold">Email:</span> {{ customer?.email || 'N/A' }}</p>
+          <p><span class="font-semibold">Address:</span> {{ customer?.address || 'N/A' }}</p>
+          <p><span class="font-semibold">Contact Number:</span> {{ customer?.contact_number || 'N/A' }}</p>
+        </CardContent>
+      </Card>
+    </div> -->
 
+    <!-- No quotations -->
+    <div v-if="!loading && filteredQuotations.length === 0" class="text-gray-500 text-center py-8">
+      No quotations found.
+    </div>
+
+    <!-- Quotations List -->
     <div v-else>
-      <div v-if="quotations.length === 0" class="text-gray-500 text-center py-8">
-        No quotations found for this customer.
-      </div>
-      <div v-else>
-        <div v-for="quotation in quotations" :key="quotation.id" class="mb-8 p-4 border rounded bg-white shadow-sm">
-          <div class="flex justify-between items-center mb-2">
-            <div>
-              <div class="font-semibold text-lg">Quotation #{{ quotation.id }}</div>
-              <div class="text-sm text-gray-500">Date: {{ quotation.quotation_date }}</div>
-            </div>
-            <Button size="sm" :loading="sendingEmail === quotation.id" @click="sendQuotationEmail(quotation.id)"
-              :disabled="sendingEmail === quotation.id">
-              Send to customer via email
+      <div v-for="quotation in filteredQuotations" :key="quotation.id" class="mb-8 p-4 border rounded bg-white shadow-sm">
+        <div class="flex justify-between items-center mb-2">
+          <div>
+          <div
+          v-for="(quotation, index) in quotations"
+          :key="quotation.id"
+          class="font-semibold text-lg"
+        >
+          Quotation #{{ index + 1 }}
+        </div>
+
+            <div class="text-sm text-gray-500">Date: {{ quotation.quotation_date }}</div>
+          </div>
+          <div class="flex gap-2">
+            <Button size="sm" variant="outline" @click="openEditDrawer(quotation)">Edit</Button>
+            <Button size="sm" variant="destructive" @click="deleteQuotation(quotation.id)">Delete</Button>
+            <Button size="sm" :disabled="sendingEmail === quotation.id" @click="sendQuotationEmail(quotation.id)">
+              <span v-if="sendingEmail === quotation.id" class="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+              Send Email
             </Button>
           </div>
-          <div class="mb-2">
-            <span class="font-semibold">Grand Total:</span>
-            ₱{{ quotation.grand_total.toFixed(2) }}
-            &nbsp; | &nbsp;
-            <span class="font-semibold">Total Items:</span>
-            {{ quotation.total_items }}
-          </div>
-          <div class="mb-2">
-            <span class="font-semibold">Items:</span>
-            <table class="w-full table-auto border-collapse border border-gray-300 mt-2">
-              <thead>
-                <tr class="bg-gray-100">
-                  <th class="border px-2 py-1">Product Name</th>
-                  <th class="border px-2 py-1">Quantity</th>
-                  <th class="border px-2 py-1">Unit_cost</th>
-                  <th class="border px-2 py-1">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(item, idx) in quotation.items" :key="idx">
-                  <td class="border px-2 py-1">{{ item.product_name }}</td>
-                  <td class="border px-2 py-1">{{ item.quantity }}</td>
-                  <td class="border px-2 py-1">₱{{ item.unit_cost.toFixed(2) }}</td>
-                  <td class="border px-2 py-1">₱{{ (item.quantity * item.unit_cost).toFixed(2) }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+        </div>
+
+        <div class="mb-2">
+          <span class="font-semibold">Grand Total:</span>
+          ₱{{ quotation.grand_total.toFixed(2) }} &nbsp; | &nbsp;
+          <span class="font-semibold">Total Items:</span>
+          {{ quotation.total_items }}
+        </div>
+
+        <div class="mb-2">
+          <span class="font-semibold">Items:</span>
+          <table class="w-full table-auto border-collapse border border-gray-300 mt-2">
+            <thead>
+              <tr class="bg-gray-100">
+                <th class="border px-2 py-1">Product Name</th>
+                <th class="border px-2 py-1">Quantity</th>
+                <th class="border px-2 py-1">Unit Cost</th>
+                <th class="border px-2 py-1">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(item, idx) in quotation.items" :key="idx">
+                <td class="border px-2 py-1">{{ item.product_name }}</td>
+                <td class="border px-2 py-1">{{ item.quantity }}</td>
+                <td class="border px-2 py-1">₱{{ item.unit_cost.toFixed(2) }}</td>
+                <td class="border px-2 py-1">₱{{ (item.quantity * item.unit_cost).toFixed(2) }}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -244,71 +349,106 @@ onMounted(async () => {
           <DrawerTitle>Add Quotation</DrawerTitle>
           <DrawerDescription>Fill in the details below.</DrawerDescription>
         </DrawerHeader>
-
-        <form class="p-4 space-y-4" @submit.prevent="submitAddQuotation">
-          <!-- Quotation Date -->
+        <form class="p-4 space-y-4" @submit.prevent="submitAdd">
+          <!-- Date -->
           <div>
-            <Label for="quotation_date">Quotation Date</Label>
-            <Input id="quotation_date" type="date" v-model="addForm.quotation_date" :disabled="addForm.processing"
-              required />
-            <p v-if="addForm.errors.quotation_date" class="text-sm text-red-600 mt-1">
-              {{ addForm.errors.quotation_date }}
-            </p>
+            <Label for="add_quotation_date">Quotation Date</Label>
+            <Input id="add_quotation_date" type="date" v-model="form.quotation_date" :disabled="form.processing" required />
+            <p v-if="form.errors.quotation_date" class="text-sm text-red-600 mt-1">{{ form.errors.quotation_date }}</p>
           </div>
 
           <!-- Items -->
           <div>
             <Label>Items</Label>
-            <div v-for="(item, index) in addForm.items" :key="index" class="grid grid-cols-12 gap-2 items-center mb-3">
+            <div v-for="(item, index) in form.items" :key="index" class="grid grid-cols-12 gap-2 items-center mb-3">
               <div class="col-span-5">
-                <Label :for="`product_name_${index}`">Product Name</Label>
-                <Input :id="`product_name_${index}`" placeholder="Product Name" v-model="item.product_name"
-                  :disabled="addForm.processing" required />
-                <p v-if="addForm.errors[`items.${index}.product_name`]" class="text-sm text-red-600 mt-1">
-                  {{ addForm.errors[`items.${index}.product_name`] }}
-                </p>
+                <Input placeholder="Product Name" v-model="item.product_name" :disabled="form.processing" required />
+                <p v-if="form.errors[`items.${index}.product_name`]" class="text-sm text-red-600 mt-1">{{ form.errors[`items.${index}.product_name`] }}</p>
               </div>
               <div class="col-span-2">
-                <Label :for="`quantity_${index}`">Quantity</Label>
-                <Input :id="`quantity_${index}`" type="number" min="1" v-model.number="item.quantity"
-                  :disabled="addForm.processing" required />
-                <p v-if="addForm.errors[`items.${index}.quantity`]" class="text-sm text-red-600 mt-1">
-                  {{ addForm.errors[`items.${index}.quantity`] }}
-                </p>
+                <Input type="number" min="1" v-model="item.quantity" :disabled="form.processing" required />
+                <p v-if="form.errors[`items.${index}.quantity`]" class="text-sm text-red-600 mt-1">{{ form.errors[`items.${index}.quantity`] }}</p>
               </div>
               <div class="col-span-3">
-                <Label :for="`unit_cost_${index}`">Unit_cost</Label>
-                <Input :id="`unit_cost_${index}`" type="number" min="0" step="0.01" v-model.number="item.unit_cost"
-                  :disabled="addForm.processing" required />
-                <p v-if="addForm.errors[`items.${index}.unit_cost`]" class="text-sm text-red-600 mt-1">
-                  {{ addForm.errors[`items.${index}.unit_cost`] }}
-                </p>
+                <Input type="number" min="0" step="0.01" v-model="item.unit_cost" :disabled="form.processing" required />
+                <p v-if="form.errors[`items.${index}.unit_cost`]" class="text-sm text-red-600 mt-1">{{ form.errors[`items.${index}.unit_cost`] }}</p>
               </div>
-              <div class="col-span-1 text-center font-mono">${{ (item.quantity * item.unit_cost).toFixed(2) }}</div>
+              <div class="col-span-1 text-center font-mono">₱{{ (item.quantity * item.unit_cost).toFixed(2) }}</div>
               <div class="col-span-1">
-                <Button variant="destructive" size="sm" type="button" @click="removeItem(index)"
-                  :disabled="addForm.processing || addForm.items.length === 1">
-                  Remove
-                </Button>
+                <Button variant="destructive" size="sm" type="button" @click="removeItem(index)" :disabled="form.processing || form.items.length === 1">Remove</Button>
               </div>
             </div>
-
-            <Button type="button" size="sm" @click="addItem" :disabled="addForm.processing">
-              + Add Item
-            </Button>
+            <Button type="button" size="sm" @click="addItem" :disabled="form.processing">+ Add Item</Button>
           </div>
 
+          <!-- Totals -->
           <div class="flex justify-between font-semibold pt-4 border-t border-gray-300">
             <div>Total Items: {{ totalItems }}</div>
-            <div>Grand Total: ${{ grandTotal.toFixed(2) }}</div>
+            <div>Grand Total: ₱{{ grandTotal.toFixed(2) }}</div>
           </div>
 
+          <!-- Actions -->
           <div class="flex justify-end space-x-2 pt-4 border-t border-gray-300">
-            <Button variant="outline" @click="isAddOpen = false" :disabled="addForm.processing">Cancel</Button>
-            <Button type="submit" :disabled="addForm.processing">Save Quotation</Button>
+            <Button variant="outline" @click="isAddOpen = false" :disabled="form.processing">Cancel</Button>
+            <Button type="submit" :disabled="form.processing">Save Quotation</Button>
+          </div>
+        </form>
+      </DrawerContent>
+    </Drawer>
+
+    <!-- Edit Quotation Drawer -->
+    <Drawer v-model:open="isEditOpen">
+      <DrawerContent>
+        <DrawerHeader>
+          <DrawerTitle>Edit Quotation</DrawerTitle>
+          <DrawerDescription>Update the details below.</DrawerDescription>
+        </DrawerHeader>
+        <form class="p-4 space-y-4" @submit.prevent="submitEdit">
+          <!-- Date -->
+          <div>
+            <Label for="edit_quotation_date">Quotation Date</Label>
+            <Input id="edit_quotation_date" type="date" v-model="form.quotation_date" :disabled="form.processing" required />
+            <p v-if="form.errors.quotation_date" class="text-sm text-red-600 mt-1">{{ form.errors.quotation_date }}</p>
+          </div>
+
+          <!-- Items -->
+          <div>
+            <Label>Items</Label>
+            <div v-for="(item, index) in form.items" :key="index" class="grid grid-cols-12 gap-2 items-center mb-3">
+              <div class="col-span-5">
+                <Input placeholder="Product Name" v-model="item.product_name" :disabled="form.processing" required />
+                <p v-if="form.errors[`items.${index}.product_name`]" class="text-sm text-red-600 mt-1">{{ form.errors[`items.${index}.product_name`] }}</p>
+              </div>
+              <div class="col-span-2">
+                <Input type="number" min="1" v-model="item.quantity" :disabled="form.processing" required />
+                <p v-if="form.errors[`items.${index}.quantity`]" class="text-sm text-red-600 mt-1">{{ form.errors[`items.${index}.quantity`] }}</p>
+              </div>
+              <div class="col-span-3">
+                <Input type="number" min="0" step="0.01" v-model="item.unit_cost" :disabled="form.processing" required />
+                <p v-if="form.errors[`items.${index}.unit_cost`]" class="text-sm text-red-600 mt-1">{{ form.errors[`items.${index}.unit_cost`] }}</p>
+              </div>
+              <div class="col-span-1 text-center font-mono">₱{{ (item.quantity * item.unit_cost).toFixed(2) }}</div>
+              <div class="col-span-1">
+                <Button variant="destructive" size="sm" type="button" @click="removeItem(index)" :disabled="form.processing || form.items.length === 1">Remove</Button>
+              </div>
+            </div>
+            <Button type="button" size="sm" @click="addItem" :disabled="form.processing">+ Add Item</Button>
+          </div>
+
+          <!-- Totals -->
+          <div class="flex justify-between font-semibold pt-4 border-t border-gray-300">
+            <div>Total Items: {{ totalItems }}</div>
+            <div>Grand Total: ₱{{ grandTotal.toFixed(2) }}</div>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex justify-end space-x-2 pt-4 border-t border-gray-300">
+            <Button variant="outline" @click="isEditOpen = false" :disabled="form.processing">Cancel</Button>
+            <Button type="submit" :disabled="form.processing">Update Quotation</Button>
           </div>
         </form>
       </DrawerContent>
     </Drawer>
   </div>
+ </AppLayout>
 </template>

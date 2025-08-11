@@ -110,17 +110,80 @@ public function store(StoreQuotationRequest $request)
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateQuotationRequest $request, Quotation $quotation)
-    {
-        //
+public function update(UpdateQuotationRequest $request, Quotation $quotation)
+{
+    $data = $request->validated();
+
+    \DB::beginTransaction();
+
+    try {
+        // Update basic quotation details first
+        $quotation->update([
+            // 'customer_id' => $data['customer_id'],
+            'quotation_date' => $data['quotation_date'],
+        ]);
+
+        // Remove old items (simplest approach; can be replaced with smarter diffing)
+        $quotation->items()->delete();
+
+        $grandTotal = 0;
+        $totalItems = 0;
+
+        // Add the updated items
+        foreach ($data['items'] as $item) {
+            $quantity = $item['quantity'];
+            $price = $item['price'];
+
+            $quotation->items()->create([
+                'product_name' => $item['product_name'],
+                'quantity' => $quantity,
+                'unit_cost' => $price,
+            ]);
+
+            $grandTotal += $quantity * $price;
+            $totalItems += $quantity;
+        }
+
+        // Update totals
+        $quotation->update([
+            'grand_total' => $grandTotal,
+            'total_items' => $totalItems,
+        ]);
+
+        \DB::commit();
+
+        return response()->json($quotation->load('items'), 200);
+
+    } catch (\Exception $e) {
+        \DB::rollBack();
+        return response()->json([
+            'error' => 'Failed to update quotation',
+            'message' => $e->getMessage()
+        ], 500);
     }
+}
+
 
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(Quotation $quotation)
     {
-        //
+        // Start a DB transaction
+        \DB::beginTransaction();
+
+        try {
+            // Delete the quotation and its items
+            $quotation->items()->delete();
+            $quotation->delete();
+
+            \DB::commit();
+
+            return response()->json(['message' => 'Quotation deleted successfully'], 200);
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return response()->json(['error' => 'Failed to delete quotation', 'message' => $e->getMessage()], 500);
+        }
     }
 
     public function byCustomer($customerId)

@@ -34,7 +34,7 @@
                 <thead>
                     <tr style="background-color: #f9fafb; border-bottom: 1px solid #e5e7eb;">
                         <th style="text-align: left; padding: 8px;">Product Name</th>
-                        <th style="text-align: left; padding: 8px;">Description</th>
+
                         <th style="text-align: center; padding: 8px;">Qty</th>
                         <th style="text-align: right; padding: 8px;">Unit Cost</th>
                         <th style="text-align: right; padding: 8px;">Subtotal</th>
@@ -44,10 +44,9 @@
                     @foreach ($quotation->items as $item)
                         <tr style="border-bottom: 1px solid #e5e7eb;">
                             <td style="padding: 8px;">{{ $item->product_name }}</td>
-                            <td style="padding: 8px;">{{ $item->item_description ?? '-' }}</td>
                             <td style="text-align: center; padding: 8px;">{{ $item->quantity }}</td>
-                            <td style="text-align: right; padding: 8px;">${{ number_format($item->unit_cost, 2) }}</td>
-                            <td style="text-align: right; padding: 8px;">${{ number_format($item->quantity * $item->unit_cost, 2) }}</td>
+                            <td style="text-align: right; padding: 8px;">₱{{ number_format($item->unit_cost, 2) }}</td>
+                            <td style="text-align: right; padding: 8px;">₱{{ number_format($item->quantity * $item->unit_cost, 2) }}</td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -55,7 +54,7 @@
                     <tr>
                         <td colspan="4" style="text-align: right; padding: 8px; font-weight: 600; background-color: #f9fafb;">Grand Total:</td>
                         <td style="text-align: right; padding: 8px; font-weight: 600; background-color: #f9fafb;">
-                            ${{ number_format($quotation->grand_total, 2) }}
+                            ₱{{ number_format($quotation->grand_total, 2) }}
                         </td>
                     </tr>
                 </tfoot>
