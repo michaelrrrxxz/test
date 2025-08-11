@@ -18,6 +18,8 @@ composer install
 cp .env.example .env
 php artisan key:generate
 php artisan migrate
+
+3. FRontend Setep (Vue)
 cd ../front
 npm install
 
@@ -29,18 +31,29 @@ http://localhost:5173
 Backend will run at:
 http://localhost:8000
 
+
 🌐 API Base URL
-All API endpoints are prefixed with:
+
 http://localhost:8000/api/v1
+📌 API Routes – Customers
 
+GET → http://localhost:8000/api/v1/customers
+CustomerController@index
 
-📌 API Routes
-Customers
-Method	Endpoint	Controller Action
-GET	/customers	CustomerController@index
-POST	/customers	CustomerController@store
-GET	/customers/{customer}	CustomerController@show
-PUT/PATCH	/customers/{customer}	CustomerController@update
-DELETE	/customers/{customer}	CustomerController@destroy
-GET	/customers/{customer}/quotations	QuotationController@indexByCustomer
-POST	/customers/{customer}/quotations	QuotationController@storeForCustomer
+POST → http://localhost:8000/api/v1/customers
+CustomerController@store
+
+GET → http://localhost:8000/api/v1/customers/{customer}
+CustomerController@show
+
+PUT / PATCH → http://localhost:8000/api/v1/customers/{customer}
+CustomerController@update
+
+DELETE → http://localhost:8000/api/v1/customers/{customer}
+CustomerController@destroy
+
+GET → http://localhost:8000/api/v1/customers/{customer}/quotations
+QuotationController@indexByCustomer
+
+POST → http://localhost:8000/api/v1/customers/{customer}/quotations
+QuotationController@storeForCustomer
