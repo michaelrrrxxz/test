@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Customers from '../Pages/Customers.vue'
 import Users from '../Pages/Users.vue'
+import QuotationsByCustomer from '../Pages/QuotationsByCustomer.vue'
 
 
 const routes = [
@@ -13,6 +14,12 @@ const routes = [
     path: '/users',
     name: 'Users',  
     component: Users,
+  },
+  {
+    path: '/quotations/:customerId',
+    name: 'QuotationsByCustomer',
+    component: QuotationsByCustomer,
+    props: true,
   }
 ]
 

@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import api from '@/Api/Axios'
-import { toast } from 'vue-sonner'
 
+import { Toaster } from '@/components/ui/sonner'
+import { toast } from 'vue-sonner'
+import 'vue-sonner/style.css'
 import {
   Dialog,
   DialogContent,
@@ -25,6 +27,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 interface Customer {
   id: number | string
@@ -66,6 +72,10 @@ const editForm = reactive({
   processing: false,
 })
 
+// Add this ref for the drawer state and selected customer
+const isViewQuotationsOpen = ref(false)
+const selectedCustomer = ref<Customer | null>(null)
+
 // Fetch customers on mounted
 async function fetchCustomers() {
   try {
@@ -86,6 +96,11 @@ function openAdd() {
   addForm.processing = false
   isAddOpen.value = true
 }
+
+function openViewQuotations(customer: Customer) {
+  router.push(`/quotations/${customer.id}`)
+}
+
 
 function openEdit(customer: Customer) {
   editId.value = customer.id
@@ -177,7 +192,8 @@ function deleteCustomer(id: number | string) {
 
 
 <template>
-  <div class="p-4 max-w-4xl mx-auto">
+  <Toaster position="bottom-right" closeButton />
+  <div class="p-2 max-w-6xl mx-auto">
     <div class="flex justify-between items-center mb-4">
       <h2 class="text-2xl font-semibold">Customers</h2>
       <Button size="sm" variant="secondary" @click="openAdd">Add Customer</Button>
@@ -203,6 +219,7 @@ function deleteCustomer(id: number | string) {
           <TableCell class="px-4 py-2 truncate">{{ customer.address }}</TableCell>
           <TableCell class="px-4 py-2 truncate">{{ customer.contact_number }}</TableCell>
           <TableCell class="px-4 py-2 space-x-2">
+            <Button size="sm" variant="secondary" @click="openViewQuotations(customer)">View Quotations</Button>
             <Button size="sm" variant="outline" @click="openEdit(customer)">Edit</Button>
             <Button size="sm" variant="destructive" @click="deleteCustomer(customer.id)">Delete</Button>
           </TableCell>
@@ -229,63 +246,35 @@ function deleteCustomer(id: number | string) {
         <form class="p-4 space-y-4" @submit.prevent="submitAdd">
           <div>
             <Label for="add-name">Name</Label>
-            <Input
-              id="add-name"
-              v-model="addForm.name"
-              placeholder="Name"
-              :disabled="addForm.processing"
-              required
-            />
+            <Input id="add-name" v-model="addForm.name" placeholder="Name" :disabled="addForm.processing" required />
             <p v-if="addForm.errors.name" class="text-sm text-red-600">{{ addForm.errors.name }}</p>
           </div>
 
           <div>
             <Label for="add-email">Email</Label>
-            <Input
-              id="add-email"
-              v-model="addForm.email"
-              type="email"
-              placeholder="Email"
-              :disabled="addForm.processing"
-              required
-            />
+            <Input id="add-email" v-model="addForm.email" type="email" placeholder="Email"
+              :disabled="addForm.processing" required />
             <p v-if="addForm.errors.email" class="text-sm text-red-600">{{ addForm.errors.email }}</p>
           </div>
 
           <div>
             <Label for="add-dob">Date of Birth</Label>
-            <Input
-              id="add-dob"
-              v-model="addForm.date_of_birth"
-              type="date"
-              placeholder="YYYY-MM-DD"
-              :disabled="addForm.processing"
-              required
-            />
+            <Input id="add-dob" v-model="addForm.date_of_birth" type="date" placeholder="YYYY-MM-DD"
+              :disabled="addForm.processing" required />
             <p v-if="addForm.errors.date_of_birth" class="text-sm text-red-600">{{ addForm.errors.date_of_birth }}</p>
           </div>
 
           <div>
             <Label for="add-address">Address</Label>
-            <Input
-              id="add-address"
-              v-model="addForm.address"
-              placeholder="Address"
-              :disabled="addForm.processing"
-              required
-            />
+            <Input id="add-address" v-model="addForm.address" placeholder="Address" :disabled="addForm.processing"
+              required />
             <p v-if="addForm.errors.address" class="text-sm text-red-600">{{ addForm.errors.address }}</p>
           </div>
 
           <div>
             <Label for="add-contact">Contact Number</Label>
-            <Input
-              id="add-contact"
-              v-model="addForm.contact_number"
-              placeholder="+1-555-9811-376"
-              :disabled="addForm.processing"
-              required
-            />
+            <Input id="add-contact" v-model="addForm.contact_number" placeholder="+1-555-9811-376"
+              :disabled="addForm.processing" required />
             <p v-if="addForm.errors.contact_number" class="text-sm text-red-600">{{ addForm.errors.contact_number }}</p>
           </div>
 
@@ -308,64 +297,37 @@ function deleteCustomer(id: number | string) {
         <form class="p-4 space-y-4" @submit.prevent="submitEdit">
           <div>
             <Label for="edit-name">Name</Label>
-            <Input
-              id="edit-name"
-              v-model="editForm.name"
-              placeholder="Name"
-              :disabled="editForm.processing"
-              required
-            />
+            <Input id="edit-name" v-model="editForm.name" placeholder="Name" :disabled="editForm.processing" required />
             <p v-if="editForm.errors.name" class="text-sm text-red-600">{{ editForm.errors.name }}</p>
           </div>
 
           <div>
             <Label for="edit-email">Email</Label>
-            <Input
-              id="edit-email"
-              v-model="editForm.email"
-              type="email"
-              placeholder="Email"
-              :disabled="editForm.processing"
-              required
-            />
+            <Input id="edit-email" v-model="editForm.email" type="email" placeholder="Email"
+              :disabled="editForm.processing" required />
             <p v-if="editForm.errors.email" class="text-sm text-red-600">{{ editForm.errors.email }}</p>
           </div>
 
           <div>
             <Label for="edit-dob">Date of Birth</Label>
-            <Input
-              id="edit-dob"
-              v-model="editForm.date_of_birth"
-              type="date"
-              placeholder="YYYY-MM-DD"
-              :disabled="editForm.processing"
-              required
-            />
+            <Input id="edit-dob" v-model="editForm.date_of_birth" type="date" placeholder="YYYY-MM-DD"
+              :disabled="editForm.processing" required />
             <p v-if="editForm.errors.date_of_birth" class="text-sm text-red-600">{{ editForm.errors.date_of_birth }}</p>
           </div>
 
           <div>
             <Label for="edit-address">Address</Label>
-            <Input
-              id="edit-address"
-              v-model="editForm.address"
-              placeholder="Address"
-              :disabled="editForm.processing"
-              required
-            />
+            <Input id="edit-address" v-model="editForm.address" placeholder="Address" :disabled="editForm.processing"
+              required />
             <p v-if="editForm.errors.address" class="text-sm text-red-600">{{ editForm.errors.address }}</p>
           </div>
 
           <div>
             <Label for="edit-contact">Contact Number</Label>
-            <Input
-              id="edit-contact"
-              v-model="editForm.contact_number"
-              placeholder="+1-555-9811-376"
-              :disabled="editForm.processing"
-              required
-            />
-            <p v-if="editForm.errors.contact_number" class="text-sm text-red-600">{{ editForm.errors.contact_number }}</p>
+            <Input id="edit-contact" v-model="editForm.contact_number" placeholder="+1-555-9811-376"
+              :disabled="editForm.processing" required />
+            <p v-if="editForm.errors.contact_number" class="text-sm text-red-600">{{ editForm.errors.contact_number }}
+            </p>
           </div>
 
           <div class="flex justify-end space-x-2">
@@ -375,5 +337,7 @@ function deleteCustomer(id: number | string) {
         </form>
       </DrawerContent>
     </Drawer>
+
+ 
   </div>
 </template>

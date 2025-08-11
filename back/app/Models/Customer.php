@@ -13,5 +13,9 @@ class Customer extends Model
         'email',
         'contact_number',
     ];
+    public function quotations()
+{
+    return $this->hasMany(Quotation::class);
+}
 }
 
