@@ -11,7 +11,7 @@ A **full-stack** Laravel + Vue 3 (Vite) application with:
 ### 1️⃣ Clone the Repository
 ```bash
 git clone https://github.com/michaelrrrxxz/test.git
-
+```
 2️⃣ Backend Setup (Laravel)
 cd back
 composer install
