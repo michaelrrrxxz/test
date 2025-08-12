@@ -21,6 +21,13 @@ return [
     'resend' => [
         'key' => env('RESEND_KEY'),
     ],
+    
+    'brevo' => [
+    'api_key' => env('BREVO_API_KEY'),
+    'sender_name' => env('BREVO_SENDER_NAME'),
+    'sender_email' => env('BREVO_SENDER_EMAIL'),
+],
+
 
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),

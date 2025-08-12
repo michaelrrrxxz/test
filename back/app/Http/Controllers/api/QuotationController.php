@@ -12,10 +12,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 
 
+use App\Libraries\Brevo;
 
 
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\ClientException;
 
 class QuotationController extends Controller
 {
@@ -192,49 +191,33 @@ public function update(UpdateQuotationRequest $request, Quotation $quotation)
         return response()->json($customer->quotations);
     }
 
+    public function sendEmail(Request $request, Quotation $quotation)
+    {
+        $customer = $quotation->customer;
+        $htmlContent = view('emails.quotation', compact('quotation', 'customer'))->render();
 
+        $brevo = new Brevo();
+        $result = $brevo->sendQuotationEmail(
+            $customer->email,
+            $customer->name,
+            'Your Quotation',
+            $htmlContent
+        );
 
+        if ($result['success']) {
+            return response()->json([
+                'message' => 'Quotation sent to customer.',
+                'brevo_response' => $result['response']
+            ]);
+        }
 
-public function sendEmail(Request $request, Quotation $quotation)
-{
-    $customer = $quotation->customer;
-
-    $client = new Client();
-
-    try {
-        $response = $client->post('https://api.brevo.com/v3/smtp/email', [
-            'headers' => [
-                'accept' => 'application/json',
-                'api-key' => trim(env('BREVO_API_KEY')),
-                'content-type' => 'application/json',
-            ],
-            'json' => [
-                'sender' => [
-                    'name'  => env('BREVO_SENDER_NAME'),
-                    'email' => env('BREVO_SENDER_EMAIL'),
-                ],
-                'to' => [
-                    ['email' => $customer->email, 'name' => $customer->name]
-                ],
-                'subject' => 'Your Quotation',
-                'htmlContent' => view('emails.quotation', compact('quotation', 'customer'))->render()
-            ],
-        ]);
-
-        return response()->json([
-            'message' => 'Quotation sent to customer.',
-            'brevo_response' => json_decode($response->getBody(), true)
-        ]);
-
-    } catch (ClientException $e) {
-        // Show full Brevo error for debugging
         return response()->json([
             'error' => 'Brevo API request failed',
-            'status_code' => $e->getResponse()->getStatusCode(),
-            'brevo_response' => json_decode($e->getResponse()->getBody(), true)
+            'status_code' => $result['status_code'],
+            'brevo_response' => $result['response']
         ], 500);
     }
-}
+
 
 
 }
