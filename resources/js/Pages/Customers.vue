@@ -297,7 +297,6 @@ function deleteCustomer(id: number | string) {
         v-model="addForm.address"
         placeholder="Address"
         :disabled="addForm.processing"
-        required
         :class="addForm.errors.address ? 'border-red-500 focus:border-red-500' : ''"
       />
       <p v-if="addForm.errors.address" class="text-sm text-red-600">

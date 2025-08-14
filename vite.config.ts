@@ -12,7 +12,7 @@ export default defineConfig({
     plugins: [
         laravel([
             'resources/css/app.css',
-            'resources/js/app.ts',
+            'resources/js/main.ts',
         ]),
         vue(),
         tailwindcss(),
