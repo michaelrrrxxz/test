@@ -500,48 +500,148 @@ async function sendQuotationEmail(quotationId: number) {
           <DrawerDescription>Update the details below.</DrawerDescription>
         </DrawerHeader>
         <form class="p-4 space-y-4" @submit.prevent="submitEdit">
-          <!-- Date -->
-          <div>
+        <!-- Date -->
+        <div>
             <Label for="edit_quotation_date">Quotation Date</Label>
-            <Input id="edit_quotation_date" type="date" v-model="form.quotation_date" :disabled="form.processing" required />
-            <p v-if="form.errors.quotation_date" class="text-sm text-red-600 mt-1">{{ form.errors.quotation_date }}</p>
-          </div>
+            <Input
+            id="edit_quotation_date"
+            type="date"
+            v-model="form.quotation_date"
+            :disabled="form.processing"
+            required
+            />
+            <p v-if="form.errors.quotation_date" class="text-sm text-red-600 mt-1">
+            {{ form.errors.quotation_date }}
+            </p>
+        </div>
 
-          <!-- Items -->
-          <div>
+        <!-- Items -->
+        <div>
             <Label>Items</Label>
-            <div v-for="(item, index) in form.items" :key="index" class="grid grid-cols-12 gap-2 items-center mb-3">
-              <div class="col-span-5">
-                <Input placeholder="Product Name" v-model="item.product_name" :disabled="form.processing" required />
-                <p v-if="form.errors[`items.${index}.product_name`]" class="text-sm text-red-600 mt-1">{{ form.errors[`items.${index}.product_name`] }}</p>
-              </div>
-              <div class="col-span-2">
-                <Input type="number" min="1" v-model="item.quantity" :disabled="form.processing" required />
-                <p v-if="form.errors[`items.${index}.quantity`]" class="text-sm text-red-600 mt-1">{{ form.errors[`items.${index}.quantity`] }}</p>
-              </div>
-              <div class="col-span-3">
-                <Input type="number" min="0" step="0.01" v-model="item.unit_cost" :disabled="form.processing" required />
-                <p v-if="form.errors[`items.${index}.unit_cost`]" class="text-sm text-red-600 mt-1">{{ form.errors[`items.${index}.unit_cost`] }}</p>
-              </div>
-              <div class="col-span-1 text-center font-mono">₱{{ ((Number(item.quantity) || 0) * (Number(item.unit_cost) || 0)).toFixed(2) }}</div>
-              <div class="col-span-1">
-                <Button variant="destructive" size="sm" type="button" @click="removeItem(index)" :disabled="form.processing || form.items.length === 1">Remove</Button>
-              </div>
+            <div
+            v-for="(item, index) in form.items"
+            :key="index"
+            class="grid grid-cols-12 gap-2 items-center mb-3"
+            >
+            <!-- Product Name -->
+            <div class="col-span-5">
+                <Label :for="`edit_product_name_${index}`">Product Name</Label>
+                <Input
+                :id="`edit_product_name_${index}`"
+                placeholder="Product Name"
+                v-model="item.product_name"
+                :disabled="form.processing"
+                required
+                />
+                <p
+                v-if="form.errors[`items.${index}.product_name`]"
+                class="text-sm text-red-600 mt-1"
+                >
+                {{ form.errors[`items.${index}.product_name`] }}
+                </p>
             </div>
-            <Button type="button" size="sm" @click="addItem" :disabled="form.processing">+ Add Item</Button>
-          </div>
 
-          <!-- Totals -->
-          <div class="flex justify-between font-semibold pt-4 border-t border-gray-300">
+            <!-- Description (optional) -->
+            <div class="col-span-2">
+                <Label :for="`edit_item_description_${index}`">Description (optional)</Label>
+                <Input
+                :id="`edit_item_description_${index}`"
+                placeholder="Description"
+                v-model="item.item_description"
+                :disabled="form.processing"
+                />
+                <p
+                v-if="form.errors[`items.${index}.item_description`]"
+                class="text-sm text-red-600 mt-1"
+                >
+                {{ form.errors[`items.${index}.item_description`] }}
+                </p>
+            </div>
+
+            <!-- Quantity -->
+            <div class="col-span-2">
+                <Label :for="`edit_quantity_${index}`">Quantity</Label>
+                <Input
+                :id="`edit_quantity_${index}`"
+                type="number"
+                min="1"
+                v-model="item.quantity"
+                :disabled="form.processing"
+                required
+                />
+                <p
+                v-if="form.errors[`items.${index}.quantity`]"
+                class="text-sm text-red-600 mt-1"
+                >
+                {{ form.errors[`items.${index}.quantity`] }}
+                </p>
+            </div>
+
+            <!-- Unit Cost -->
+            <div class="col-span-3">
+                <Label :for="`edit_unit_cost_${index}`">Unit Cost</Label>
+                <Input
+                :id="`edit_unit_cost_${index}`"
+                type="number"
+                min="0"
+                step="0.01"
+                v-model="item.unit_cost"
+                :disabled="form.processing"
+                required
+                />
+                <p
+                v-if="form.errors[`items.${index}.unit_cost`]"
+                class="text-sm text-red-600 mt-1"
+                >
+                {{ form.errors[`items.${index}.unit_cost`] }}
+                </p>
+            </div>
+
+            <!-- Total -->
+            <div class="col-span-1 text-center font-mono">
+                ₱{{ ((Number(item.quantity) || 0) * (Number(item.unit_cost) || 0)).toFixed(2) }}
+            </div>
+
+            <!-- Remove Button -->
+            <div class="col-span-1">
+                <Button
+                variant="destructive"
+                size="sm"
+                type="button"
+                @click="removeItem(index)"
+                :disabled="form.processing || form.items.length === 1"
+                >
+                Remove
+                </Button>
+            </div>
+            </div>
+
+            <!-- Add Item Button -->
+            <Button
+            type="button"
+            size="sm"
+            @click="addItem"
+            :disabled="form.processing"
+            >
+            + Add Item
+            </Button>
+        </div>
+
+        <!-- Totals -->
+        <div class="flex justify-between font-semibold pt-4 border-t border-gray-300">
             <div>Total Items: {{ totalItems }}</div>
-       ₱{{ (Number(grandTotal) || 0).toFixed(2) }}
-          </div>
+            ₱{{ (Number(grandTotal) || 0).toFixed(2) }}
+        </div>
 
-          <!-- Actions -->
-          <div class="flex justify-end space-x-2 pt-4 border-t border-gray-300">
-            <Button variant="outline" @click="isEditOpen = false" :disabled="form.processing">Cancel</Button>
-            <Button type="submit" :disabled="form.processing">Update Quotation</Button>
-          </div>
+        <!-- Actions -->
+        <div class="flex justify-end space-x-2 pt-4 border-t border-gray-300">
+            <Button variant="outline" @click="isEditOpen = false" :disabled="form.processing">
+            Cancel
+            </Button>
+            <Button type="submit" :disabled="form.processing">
+            Update Quotation
+            </Button>
+        </div>
         </form>
       </DrawerContent>
     </Drawer>
