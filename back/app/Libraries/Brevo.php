@@ -15,9 +15,9 @@ class Brevo
     public function __construct()
     {
         $this->client = new Client();
-        $this->apiKey = config('services.brevo.api_key');
-        $this->senderName = config('services.brevo.sender_name');
-        $this->senderEmail = config('services.brevo.sender_email');
+        $this->apiKey = env('BREVO_API_KEY');
+        $this->senderName = env('BREVO_SENDER_NAME');
+        $this->senderEmail = env('BREVO_SENDER_EMAIL');
     }
 
     public function sendQuotationEmail($toEmail, $toName, $subject, $htmlContent)

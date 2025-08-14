@@ -1,0 +1,40 @@
+{
+  "compilerOptions": {
+    // Keep latest module syntax for Vite
+    "module": "ESNext",
+
+    // Match Vite's resolver for smooth SFC + TS imports
+    "moduleResolution": "bundler",
+
+    // Enable strict type-checking
+    "strict": true,
+
+    // Allow JSX in case you ever use it
+    "jsx": "preserve",
+
+    // Allow importing .json files
+    "resolveJsonModule": true,
+
+    // Make CommonJS interop work well
+    "esModuleInterop": true,
+
+    // Latest JS features + browser APIs
+    "lib": ["ESNext", "DOM"],
+
+    // Base for relative path mapping
+    "baseUrl": ".",
+
+    // Match your Vite alias @ => resources/js
+    "paths": {
+      "@/*": ["resources/js/*"]
+    },
+
+    // Include `.vue` file typing support
+    "types": ["vite/client", "vue"]
+  },
+  "include": [
+    "resources/js/**/*",
+    "resources/**/*.vue",
+    "vite.config.ts"
+  ]
+}

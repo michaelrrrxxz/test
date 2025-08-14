@@ -3,7 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
-
+use Illuminate\Validation\Validator;
 class StoreCustomerRequest extends FormRequest
 {
     /**
@@ -23,9 +23,9 @@ class StoreCustomerRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
-            'date_of_birth' => 'required|date',
+            'date_of_birth' => 'required|date|before:today',
             'address' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:customers,email',
+            'email' => 'required|email:rfc,dns|max:255|unique:customers,email',
             'contact_number' => 'required|string|max:15|unique:customers,contact_number',
         ];
     }
