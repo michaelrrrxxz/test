@@ -56,7 +56,7 @@ A modern web application built with Laravel backend and Vue.js frontend.
 ```
 npm run start
 ```
-** This will run application at: **
+**This will run application php artisan serve and npm run dev:**
 
 Frontend: http://localhost:5174/
 
