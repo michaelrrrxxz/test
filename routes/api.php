@@ -12,6 +12,7 @@ Route::get('/user', function (Request $request) {
 Route::prefix('v1')->group(function () {
     Route::apiResource('customers', CustomerController::class);
     Route::apiResource('quotations', QuotationController::class);
+    
     Route::get('customers/{customer}/quotations', [QuotationController::class, 'byCustomer']);
     Route::post('customers/{customer}/quotations', [QuotationController::class, 'store']);
     Route::post('quotations/{quotation}/send-email', [QuotationController::class, 'sendEmail'

@@ -16,6 +16,7 @@ import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
 import { useRoute } from 'vue-router'
 import AppLayout from '../layouts/AppLayout.vue'
+import AddQuotation from '../components/Forms/AddQuotation.vue'
 
 const route = useRoute()
 
@@ -255,12 +256,12 @@ async function sendQuotationEmail(quotationId: number) {
 
 
 <template>
-<AppLayout>
+<AppLayout :customerId="customerId">
   <div class="max-w-4xl mx-auto p-4">
     <!-- Header -->
     <div class="flex justify-between items-center mb-4">
       <h2 class="text-2xl font-semibold">Quotations of {{ customer?.name }}</h2>
-      <Button size="sm" @click="openAddDrawer">Add Quotation</Button>
+        <Button @click="isAddOpen = true">+ Add Quotation</Button>
     </div>
 
     <!-- Search -->
@@ -353,298 +354,172 @@ async function sendQuotationEmail(quotationId: number) {
     </div>
 
     <!-- Add Quotation Drawer -->
-    <Drawer v-model:open="isAddOpen">
-      <DrawerContent>
-        <DrawerHeader>
-          <DrawerTitle>Add Quotation</DrawerTitle>
-          <DrawerDescription>Fill in the details below.</DrawerDescription>
-        </DrawerHeader>
-        <form class="p-4 space-y-4" @submit.prevent="submitAdd">
-          <!-- Date -->
-          <div>
-            <Label for="add_quotation_date">Quotation Date</Label>
-            <Input id="add_quotation_date" type="date" v-model="form.quotation_date" :disabled="form.processing" required />
-            <p v-if="form.errors.quotation_date" class="text-sm text-red-600 mt-1">{{ form.errors.quotation_date }}</p>
-          </div>
-        <!-- Items -->
-        <div>
-        <Label>Items</Label>
-        <div
-            v-for="(item, index) in form.items"
-            :key="index"
-            class="grid grid-cols-12 gap-2 items-center mb-3"
-        >
-            <!-- Product Name -->
-            <div class="col-span-5">
-            <Label :for="`product_name_${index}`">Product Name</Label>
-            <Input
-                :id="`product_name_${index}`"
-                placeholder="Product Name"
-                v-model="item.product_name"
-                :disabled="form.processing"
-                required
-            />
-            <p
-                v-if="form.errors[`items.${index}.product_name`]"
-                class="text-sm text-red-600 mt-1"
-            >
-                {{ form.errors[`items.${index}.product_name`] }}
-            </p>
-            </div>
-
-            <!-- Item Description (nullable) -->
-            <div class="col-span-2">
-            <Label :for="`item_description_${index}`">Description (optional)</Label>
-            <Input
-                :id="`item_description_${index}`"
-                placeholder="Description"
-                v-model="item.item_description"
-                :disabled="form.processing"
-            />
-            <p
-                v-if="form.errors[`items.${index}.item_description`]"
-                class="text-sm text-red-600 mt-1"
-            >
-                {{ form.errors[`items.${index}.item_description`] }}
-            </p>
-            </div>
-
-            <!-- Quantity -->
-            <div class="col-span-2">
-            <Label :for="`quantity_${index}`">Quantity</Label>
-            <Input
-                :id="`quantity_${index}`"
-                type="number"
-                min="1"
-                v-model="item.quantity"
-                :disabled="form.processing"
-                required
-            />
-            <p
-                v-if="form.errors[`items.${index}.quantity`]"
-                class="text-sm text-red-600 mt-1"
-            >
-                {{ form.errors[`items.${index}.quantity`] }}
-            </p>
-            </div>
-
-            <!-- Unit Cost -->
-            <div class="col-span-3">
-            <Label :for="`unit_cost_${index}`">Unit Cost</Label>
-            <Input
-                :id="`unit_cost_${index}`"
-                type="number"
-                min="0"
-                step="0.01"
-                v-model="item.unit_cost"
-                :disabled="form.processing"
-                required
-            />
-            <p
-                v-if="form.errors[`items.${index}.unit_cost`]"
-                class="text-sm text-red-600 mt-1"
-            >
-                {{ form.errors[`items.${index}.unit_cost`] }}
-            </p>
-            </div>
-
-            <!-- Total -->
-            <div class="col-span-1 text-center font-mono">
-                 ₱{{ ((Number(item.quantity) || 0) * (Number(item.unit_cost) || 0)).toFixed(2) }}
-            </div>
-
-            <!-- Remove Button -->
-            <div class="col-span-1">
-            <Button
-                variant="destructive"
-                size="sm"
-                type="button"
-                @click="removeItem(index)"
-                :disabled="form.processing || form.items.length === 1"
-            >
-                Remove
-            </Button>
-            </div>
-        </div>
-
-        <Button
-            type="button"
-            size="sm"
-            @click="addItem"
-            :disabled="form.processing"
-        >
-            + Add Item
-        </Button>
-        </div>
-          <!-- Totals -->
-          <div class="flex justify-between font-semibold pt-4 border-t border-gray-300">
-            <div>Total Items: {{ totalItems }}</div>
-            ₱{{ totalItems.toFixed(2) }}
-
-          </div>
-
-          <!-- Actions -->
-          <div class="flex justify-end space-x-2 pt-4 border-t border-gray-300">
-            <Button variant="outline" @click="isAddOpen = false" :disabled="form.processing">Cancel</Button>
-            <Button type="submit" :disabled="form.processing">Save Quotation</Button>
-          </div>
-        </form>
-      </DrawerContent>
-    </Drawer>
-
+    <AddQuotation
+    v-model="isAddOpen"
+    :customer-id="customerId"
+    @saved="fetchCustomerAndQuotations"
+    />
     <!-- Edit Quotation Drawer -->
-    <Drawer v-model:open="isEditOpen">
-      <DrawerContent>
-        <DrawerHeader>
-          <DrawerTitle>Edit Quotation</DrawerTitle>
-          <DrawerDescription>Update the details below.</DrawerDescription>
-        </DrawerHeader>
-        <form class="p-4 space-y-4" @submit.prevent="submitEdit">
-        <!-- Date -->
-        <div>
-            <Label for="edit_quotation_date">Quotation Date</Label>
-            <Input
-            id="edit_quotation_date"
-            type="date"
-            v-model="form.quotation_date"
-            :disabled="form.processing"
-            required
-            />
-            <p v-if="form.errors.quotation_date" class="text-sm text-red-600 mt-1">
-            {{ form.errors.quotation_date }}
-            </p>
-        </div>
+     <Drawer v-model:open="isEditOpen">
+        <DrawerContent class="flex flex-col max-h-screen">
+            <!-- Header -->
+            <DrawerHeader class="shrink-0">
+            <DrawerTitle>Edit Quotation</DrawerTitle>
+            <DrawerDescription>Update the details below.</DrawerDescription>
+            </DrawerHeader>
 
-        <!-- Items -->
-        <div>
-            <Label>Items</Label>
-            <div
-            v-for="(item, index) in form.items"
-            :key="index"
-            class="grid grid-cols-12 gap-2 items-center mb-3"
+            <!-- Scrollable Form Body -->
+            <form
+            id="editQuotationForm"
+            class="flex-1 overflow-y-auto p-4 space-y-4"
+            @submit.prevent="submitEdit"
             >
-            <!-- Product Name -->
-            <div class="col-span-5">
-                <Label :for="`edit_product_name_${index}`">Product Name</Label>
+            <!-- Date -->
+            <div>
+                <Label for="edit_quotation_date">Quotation Date</Label>
                 <Input
-                :id="`edit_product_name_${index}`"
-                placeholder="Product Name"
-                v-model="item.product_name"
+                id="edit_quotation_date"
+                type="date"
+                v-model="form.quotation_date"
                 :disabled="form.processing"
                 required
                 />
-                <p
-                v-if="form.errors[`items.${index}.product_name`]"
-                class="text-sm text-red-600 mt-1"
-                >
-                {{ form.errors[`items.${index}.product_name`] }}
+                <p v-if="form.errors.quotation_date" class="text-sm text-red-600 mt-1">
+                {{ form.errors.quotation_date }}
                 </p>
             </div>
 
-            <!-- Description (optional) -->
-            <div class="col-span-2">
-                <Label :for="`edit_item_description_${index}`">Description (optional)</Label>
-                <Input
-                :id="`edit_item_description_${index}`"
-                placeholder="Description"
-                v-model="item.item_description"
-                :disabled="form.processing"
-                />
-                <p
-                v-if="form.errors[`items.${index}.item_description`]"
-                class="text-sm text-red-600 mt-1"
+            <!-- Items -->
+            <div>
+                <Label>Items</Label>
+                <div
+                v-for="(item, index) in form.items"
+                :key="index"
+                class="grid grid-cols-12 gap-2 items-center mb-3"
                 >
-                {{ form.errors[`items.${index}.item_description`] }}
-                </p>
-            </div>
+                <!-- Product Name -->
+                <div class="col-span-5">
+                    <Label :for="`edit_product_name_${index}`">Product Name</Label>
+                    <Input
+                    :id="`edit_product_name_${index}`"
+                    placeholder="Product Name"
+                    v-model="item.product_name"
+                    :disabled="form.processing"
+                    required
+                    />
+                    <p
+                    v-if="form.errors[`items.${index}.product_name`]"
+                    class="text-sm text-red-600 mt-1"
+                    >
+                    {{ form.errors[`items.${index}.product_name`] }}
+                    </p>
+                </div>
 
-            <!-- Quantity -->
-            <div class="col-span-2">
-                <Label :for="`edit_quantity_${index}`">Quantity</Label>
-                <Input
-                :id="`edit_quantity_${index}`"
-                type="number"
-                min="1"
-                v-model="item.quantity"
-                :disabled="form.processing"
-                required
-                />
-                <p
-                v-if="form.errors[`items.${index}.quantity`]"
-                class="text-sm text-red-600 mt-1"
-                >
-                {{ form.errors[`items.${index}.quantity`] }}
-                </p>
-            </div>
+                <!-- Description -->
+                <div class="col-span-2">
+                    <Label :for="`edit_item_description_${index}`">Description (optional)</Label>
+                    <Input
+                    :id="`edit_item_description_${index}`"
+                    placeholder="Description"
+                    v-model="item.item_description"
+                    :disabled="form.processing"
+                    />
+                    <p
+                    v-if="form.errors[`items.${index}.item_description`]"
+                    class="text-sm text-red-600 mt-1"
+                    >
+                    {{ form.errors[`items.${index}.item_description`] }}
+                    </p>
+                </div>
 
-            <!-- Unit Cost -->
-            <div class="col-span-3">
-                <Label :for="`edit_unit_cost_${index}`">Unit Cost</Label>
-                <Input
-                :id="`edit_unit_cost_${index}`"
-                type="number"
-                min="0"
-                step="0.01"
-                v-model="item.unit_cost"
-                :disabled="form.processing"
-                required
-                />
-                <p
-                v-if="form.errors[`items.${index}.unit_cost`]"
-                class="text-sm text-red-600 mt-1"
-                >
-                {{ form.errors[`items.${index}.unit_cost`] }}
-                </p>
-            </div>
+                <!-- Quantity -->
+                <div class="col-span-2">
+                    <Label :for="`edit_quantity_${index}`">Quantity</Label>
+                    <Input
+                    :id="`edit_quantity_${index}`"
+                    type="number"
+                    min="1"
+                    v-model="item.quantity"
+                    :disabled="form.processing"
+                    required
+                    />
+                    <p
+                    v-if="form.errors[`items.${index}.quantity`]"
+                    class="text-sm text-red-600 mt-1"
+                    >
+                    {{ form.errors[`items.${index}.quantity`] }}
+                    </p>
+                </div>
 
-            <!-- Total -->
-            <div class="col-span-1 text-center font-mono">
-                ₱{{ ((Number(item.quantity) || 0) * (Number(item.unit_cost) || 0)).toFixed(2) }}
-            </div>
+                <!-- Unit Cost -->
+                <div class="col-span-3">
+                    <Label :for="`edit_unit_cost_${index}`">Unit Cost</Label>
+                    <Input
+                    :id="`edit_unit_cost_${index}`"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    v-model="item.unit_cost"
+                    :disabled="form.processing"
+                    required
+                    />
+                    <p
+                    v-if="form.errors[`items.${index}.unit_cost`]"
+                    class="text-sm text-red-600 mt-1"
+                    >
+                    {{ form.errors[`items.${index}.unit_cost`] }}
+                    </p>
+                </div>
 
-            <!-- Remove Button -->
-            <div class="col-span-1">
+                <!-- Total -->
+                <div class="col-span-1 text-center font-mono">
+                    ₱{{ ((Number(item.quantity) || 0) * (Number(item.unit_cost) || 0)).toFixed(2) }}
+                </div>
+
+                <!-- Remove -->
+                <div class="col-span-1">
+                    <Button
+                    variant="destructive"
+                    size="sm"
+                    type="button"
+                    @click="removeItem(index)"
+                    :disabled="form.processing || form.items.length === 1"
+                    >
+                    Remove
+                    </Button>
+                </div>
+                </div>
+
+                <!-- Add Item -->
                 <Button
-                variant="destructive"
-                size="sm"
                 type="button"
-                @click="removeItem(index)"
-                :disabled="form.processing || form.items.length === 1"
+                size="sm"
+                @click="addItem"
+                :disabled="form.processing"
                 >
-                Remove
+                + Add Item
                 </Button>
             </div>
+
+            <!-- Totals -->
+            <div class="flex justify-between font-semibold pt-4 border-t border-gray-300">
+                <div>Total Items: {{ totalItems }}</div>
+                ₱{{ (Number(grandTotal) || 0).toFixed(2) }}
             </div>
+            </form>
 
-            <!-- Add Item Button -->
-            <Button
-            type="button"
-            size="sm"
-            @click="addItem"
-            :disabled="form.processing"
-            >
-            + Add Item
-            </Button>
-        </div>
-
-        <!-- Totals -->
-        <div class="flex justify-between font-semibold pt-4 border-t border-gray-300">
-            <div>Total Items: {{ totalItems }}</div>
-            ₱{{ (Number(grandTotal) || 0).toFixed(2) }}
-        </div>
-
-        <!-- Actions -->
-        <div class="flex justify-end space-x-2 pt-4 border-t border-gray-300">
+            <!-- Footer Actions -->
+            <div class="shrink-0 flex justify-end space-x-2 p-4 border-t border-gray-300">
             <Button variant="outline" @click="isEditOpen = false" :disabled="form.processing">
-            Cancel
+                Cancel
             </Button>
-            <Button type="submit" :disabled="form.processing">
-            Update Quotation
+            <Button type="submit" form="editQuotationForm" :disabled="form.processing">
+                Update Quotation
             </Button>
-        </div>
-        </form>
-      </DrawerContent>
+            </div>
+        </DrawerContent>
     </Drawer>
+
   </div>
- </AppLayout>
+</AppLayout>
 </template>

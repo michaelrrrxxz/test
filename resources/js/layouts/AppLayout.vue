@@ -34,4 +34,12 @@ import {
   NavigationMenuList,
   NavigationMenuItem
 } from '../components/ui/navigation-menu'
+
+defineProps({
+  customerId: {
+    type: String,
+    required: true
+  }
+})
 </script>
+

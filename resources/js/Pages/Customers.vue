@@ -32,6 +32,10 @@ import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
 
 
+defineProps<{
+  customerId: string
+}>()
+
 
 interface Customer {
   id: number | string
@@ -172,7 +176,7 @@ function deleteCustomer(id: number | string) {
 }
 </script>
 <template>
-<AppLayout>
+<AppLayout :customerId="customerId">
   <div class="p-2 max-w-6xl mx-auto">
     <div class="flex justify-between items-center mb-4">
       <h2 class="text-2xl font-semibold">Customers</h2>
@@ -364,8 +368,7 @@ function deleteCustomer(id: number | string) {
 
           <div>
             <Label for="edit-address">Address</Label>
-            <Input id="edit-address" v-model="editForm.address" placeholder="Address" :disabled="editForm.processing"
-              required />
+            <Input id="edit-address" v-model="editForm.address" placeholder="Address" :disabled="editForm.processing" />
             <p v-if="editForm.errors.address" class="text-sm text-red-600">{{ editForm.errors.address }}</p>
           </div>
 
