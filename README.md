@@ -51,6 +51,10 @@ A modern web application built with Laravel backend and Vue.js frontend.
     ```
     php artisan key:generate
     ```
+6. **Migrate**
+    ```
+    php artisan migrate
+    ```
 ## ⚡ Running the Application
 
 ```
@@ -61,6 +65,8 @@ npm run start
 Frontend: http://localhost:5174/
 
 Backend: http://127.0.0.1:8000/
+
+
 
 📂 Project Structure
 <pre style="font-family: monospace; line-height: 1.5; padding: 15px; border-radius: 5px;">
