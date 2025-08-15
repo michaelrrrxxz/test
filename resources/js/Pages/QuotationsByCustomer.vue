@@ -4,6 +4,7 @@ import api from '../Api/Axios'
 import 'vue-sonner/style.css'
 import { toast } from 'vue-sonner'
 
+import {Send} from 'lucide-vue-next'
 import {
   Drawer,
   DrawerContent,
@@ -45,9 +46,12 @@ interface Customer {
 }
 
 const customerId = ref(route.params.customerId as string)
+const customerEmail = computed(() => customer.value?.email ?? '');
 const quotations = ref<Quotation[]>([])
 const customer = ref<Customer | null>(null)
 const loading = ref(false)
+
+console.log('Customer Email' + customerEmail.value)
 
 // Search
 const searchQuery = ref('')
@@ -120,10 +124,12 @@ function initForm() {
 
 function addItem() {
   form.items.push({ product_name: '', item_description: '', quantity: 1, unit_cost: 0 })
+    toast.success('New item added')
 }
 
 function removeItem(index: number) {
   if (form.items.length > 1) form.items.splice(index, 1)
+     toast.success('Item removed')
 }
 
 function openAddDrawer() {
@@ -241,17 +247,32 @@ function deleteQuotation(id: number | string) {
 
 // Send email
 const sendingEmail = ref<number | null>(null)
-async function sendQuotationEmail(quotationId: number) {
-  sendingEmail.value = quotationId
-  try {
-    await api.post(`/quotations/${quotationId}/send-email`)
-    toast.success('Quotation sent to customer')
-  } catch {
-    toast.error('Failed to send email')
-  } finally {
-    sendingEmail.value = null
-  }
+function sendQuotationEmail(quotationId: number) {
+  toast("Are you sure?", {
+    description: `Send quotation to ${customerEmail.value}.`,
+    position: 'top-center',
+
+    action: {
+      label: "Send",
+      onClick: async () => {
+        sendingEmail.value = quotationId;
+        try {
+          await api.post(`/quotations/${quotationId}/send-email`);
+          toast.success("Quotation sent to customer");
+        } catch {
+
+          toast.error("Failed to send email"
+
+          );
+        } finally {
+          sendingEmail.value = null;
+        }
+      }
+    }
+  });
 }
+
+
 </script>
 
 
@@ -315,16 +336,16 @@ async function sendQuotationEmail(quotationId: number) {
             <Button size="sm" variant="destructive" @click="deleteQuotation(quotation.id)">Delete</Button>
             <Button size="sm" :disabled="sendingEmail === quotation.id" @click="sendQuotationEmail(quotation.id)">
               <span v-if="sendingEmail === quotation.id" class="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+              <Send />
               Send Email
+
             </Button>
           </div>
         </div>
 
         <div class="mb-2">
           <span class="font-semibold">Grand Total:</span>
-          ₱{{ quotation.grand_total.toFixed(2) }} &nbsp; | &nbsp;
-          <span class="font-semibold">Total Items:</span>
-          {{ quotation.total_items }}
+          ₱{{ quotation.grand_total.toFixed(2) }}
         </div>
 
         <div class="mb-2">
@@ -398,7 +419,7 @@ async function sendQuotationEmail(quotationId: number) {
                 class="grid grid-cols-12 gap-2 items-center mb-3"
                 >
                 <!-- Product Name -->
-                <div class="col-span-5">
+                <div class="col-span-3">
                     <Label :for="`edit_product_name_${index}`">Product Name</Label>
                     <Input
                     :id="`edit_product_name_${index}`"
@@ -416,7 +437,7 @@ async function sendQuotationEmail(quotationId: number) {
                 </div>
 
                 <!-- Description -->
-                <div class="col-span-2">
+                <div class="col-span-4">
                     <Label :for="`edit_item_description_${index}`">Description (optional)</Label>
                     <Input
                     :id="`edit_item_description_${index}`"
@@ -452,7 +473,7 @@ async function sendQuotationEmail(quotationId: number) {
                 </div>
 
                 <!-- Unit Cost -->
-                <div class="col-span-3">
+                <div class="col-span-2">
                     <Label :for="`edit_unit_cost_${index}`">Unit Cost</Label>
                     <Input
                     :id="`edit_unit_cost_${index}`"
@@ -472,9 +493,12 @@ async function sendQuotationEmail(quotationId: number) {
                 </div>
 
                 <!-- Total -->
-                <div class="col-span-1 text-center font-mono">
-                    ₱{{ ((Number(item.quantity) || 0) * (Number(item.unit_cost) || 0)).toFixed(2) }}
-                </div>
+                    <div class="col-span-1
+                                flex items-center justify-center">
+                                <span class="font-semibold">
+                                    ₱{{ (item.quantity * item.unit_cost).toFixed(2) }}
+                                </span>
+                                </div>
 
                 <!-- Remove -->
                 <div class="col-span-1">
@@ -489,34 +513,36 @@ async function sendQuotationEmail(quotationId: number) {
                     </Button>
                 </div>
                 </div>
-
-                <!-- Add Item -->
-                <Button
-                type="button"
-                size="sm"
-                @click="addItem"
-                :disabled="form.processing"
-                >
-                + Add Item
-                </Button>
-            </div>
-
-            <!-- Totals -->
-            <div class="flex justify-between font-semibold pt-4 border-t border-gray-300">
-                <div>Total Items: {{ totalItems }}</div>
-                ₱{{ (Number(grandTotal) || 0).toFixed(2) }}
             </div>
             </form>
 
-            <!-- Footer Actions -->
-            <div class="shrink-0 flex justify-end space-x-2 p-4 border-t border-gray-300">
-            <Button variant="outline" @click="isEditOpen = false" :disabled="form.processing">
-                Cancel
-            </Button>
-            <Button type="submit" form="editQuotationForm" :disabled="form.processing">
-                Update Quotation
-            </Button>
-            </div>
+<!-- Footer section -->
+<div class="flex flex-col shrink-0 p-4 border-t border-gray-300 space-y-4">
+  <!-- Totals row -->
+  <div class="flex items-center justify-between font-semibold">
+    <!-- Left: Add Item -->
+    <Button type="button" size="sm" @click="addItem">
+      + Add Item
+    </Button>
+
+    <!-- Right: Totals -->
+    <div class="flex items-center space-x-6">
+      <span>Total Items: {{ totalItems }}</span>
+      <span>₱{{ (Number(grandTotal) || 0).toFixed(2) }}</span>
+    </div>
+  </div>
+
+  <!-- Action buttons -->
+  <div class="flex justify-end space-x-2">
+    <Button variant="outline" @click="isEditOpen = false" :disabled="form.processing">
+      Cancel
+    </Button>
+    <Button type="submit" form="editQuotationForm" :disabled="form.processing">
+      Update Quotation
+    </Button>
+  </div>
+</div>
+
         </DrawerContent>
     </Drawer>
 

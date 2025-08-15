@@ -2,8 +2,7 @@ import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 import Customers from '../Pages/Customers.vue'
 import QuotationsByCustomer from '../Pages/QuotationsByCustomer.vue'
 import LandingPage from '@/Pages/LandingPage.vue'
-
-
+import NotFound from '@/Pages/NotFound.vue'
 declare module 'vue-router' {
   interface RouteMeta {
     title?: string
@@ -31,6 +30,13 @@ const routes: RouteRecordRaw[] = [
     component: QuotationsByCustomer,
     meta: { title: `Quotations: ${appname}` },
     props: true,
+  },
+
+    {
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    component: NotFound,
+    meta: { title: `404 Not Found: ${appname}` }
   }
 ]
 

@@ -1,4 +1,4 @@
 <template>
   <router-view />
-   <Toaster position="bottom-right" />
+   <Toaster position="top-right" />
 </template>

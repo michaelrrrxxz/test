@@ -31,6 +31,7 @@
         >
             <!-- Product Name -->
             <div class="col-span-3">
+            <Label>Product Name</Label>
             <Input v-model="item.product_name" placeholder="Product" />
             <p v-if="form.errors[`items.${index}.product_name`]" class="text-red-500 text-sm">
                 {{ form.errors[`items.${index}.product_name`] }}
@@ -39,11 +40,13 @@
 
             <!-- Description -->
             <div class="col-span-4">
+            <Label>Description</Label>
             <Input v-model="item.item_description" placeholder="Description" />
             </div>
 
             <!-- Quantity -->
             <div class="col-span-2">
+            <Label>Quantity</Label>
             <Input v-model.number="item.quantity" type="number" min="1" />
             <p v-if="form.errors[`items.${index}.quantity`]" class="text-red-500 text-sm">
                 {{ form.errors[`items.${index}.quantity`] }}
@@ -52,12 +55,19 @@
 
             <!-- Unit Cost -->
             <div class="col-span-2">
+            <Label>Unit Cost</Label>
             <Input v-model.number="item.unit_cost" type="number" step="0.01" />
             <p v-if="form.errors[`items.${index}.unit_cost`]" class="text-red-500 text-sm">
                 {{ form.errors[`items.${index}.unit_cost`] }}
             </p>
             </div>
-
+            <!-- Total Cost -->
+            <div class="col-span-1
+            flex items-center justify-center">
+            <span class="font-semibold">
+                ₱{{ (item.quantity * item.unit_cost).toFixed(2) }}
+            </span>
+            </div>
             <!-- Remove Button -->
             <div class="col-span-1 flex justify-center">
             <Button type="button" @click="removeItem(index)" variant="destructive">
@@ -67,22 +77,34 @@
         </div>
 
         <!-- Add Item Button -->
-        <Button type="button" size="sm" @click="addItem">
-            + Add Item
-        </Button>
+
         </div>
 
         <!-- Totals -->
-        <div class="flex justify-between font-semibold pt-4 border-t">
-          <span>Total Items: {{ totalItems }}</span>
-          <span>₱{{ grandTotal.toFixed(2) }}</span>
-        </div>
-      </form>
 
-      <div class="shrink-0 flex justify-end space-x-2 p-4 border-t">
-        <Button variant="outline" @click="isOpen = false">Cancel</Button>
-        <Button type="submit" form="addQuotationForm" :disabled="form.processing">Save</Button>
-      </div>
+
+      </form>
+    <div class="flex flex-col shrink-0 p-4 border-t space-y-4">
+    <!-- Totals row -->
+    <div class="flex items-center justify-between font-semibold">
+        <!-- Left: Add Item -->
+        <Button type="button" size="sm" @click="addItem">
+        + Add Item
+        </Button>
+
+        <!-- Right: Totals -->
+            <div class="flex items-center space-x-6">
+            <span>Total Items: {{ totalItems }}</span>
+            <span>₱{{ grandTotal.toFixed(2) }}</span>
+            </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="flex justify-end space-x-2">
+            <Button variant="outline" @click="isOpen = false">Cancel</Button>
+            <Button type="submit" form="addQuotationForm" :disabled="form.processing">Save</Button>
+        </div>
+    </div>
     </DrawerContent>
   </Drawer>
 </template>
@@ -125,6 +147,7 @@ const grandTotal = computed(() =>
 
 function addItem() {
   form.items.push({ product_name: '', item_description: '', quantity: 1, unit_cost: 0 })
+   toast.success('New item added')
 }
 
 function removeItem(index: number) {
@@ -154,7 +177,7 @@ async function submitAdd() {
       }))
     })
     toast.success('Quotation added')
-    emit('saved') // tell parent to refresh
+    emit('saved')
     isOpen.value = false
   } catch (error: any) {
     if (error.response?.data?.errors) {
