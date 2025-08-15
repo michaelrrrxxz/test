@@ -12,12 +12,15 @@ import {
   DrawerTitle,
   DrawerDescription,
 } from '../components/ui/drawer'
+import {Table , TableHeader, TableRow, TableHead, TableBody} from '../components/ui/table'
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
 import { useRoute } from 'vue-router'
 import AppLayout from '../layouts/AppLayout.vue'
 import AddQuotation from '../components/Forms/AddQuotation.vue'
+import EditQuotation from '@/components/Forms/EditQuotation.vue'
 
 const route = useRoute()
 
@@ -53,14 +56,14 @@ const loading = ref(false)
 
 console.log('Customer Email' + customerEmail.value)
 
-// Search
+// search
 const searchQuery = ref('')
 
-// Drawer state
+//drawer
 const isAddOpen = ref(false)
 const isEditOpen = ref(false)
 
-// Form state (shared logic for add/edit)
+//form state
 const form = reactive({
   id: null as number | null,
   quotation_date: '',
@@ -69,7 +72,7 @@ const form = reactive({
   processing: false,
 })
 
-// Computed totals
+// computed totals
 const totalItems = computed(() =>
   form.items.reduce((sum, i) => sum + (Number(i.quantity) || 0), 0)
 )
@@ -82,7 +85,7 @@ const grandTotal = computed(() =>
   )
 )
 
-// Filtered quotations
+// filtered quotations
 const filteredQuotations = computed(() => {
   if (!searchQuery.value.trim()) return quotations.value
   const query = searchQuery.value.toLowerCase()
@@ -93,7 +96,7 @@ const filteredQuotations = computed(() => {
   )
 })
 
-// Fetch data
+// fetch
 async function fetchCustomerAndQuotations() {
   loading.value = true
   try {
@@ -112,15 +115,7 @@ async function fetchCustomerAndQuotations() {
 
 onMounted(fetchCustomerAndQuotations)
 
-// Form helpers
-function initForm() {
-  form.id = null
-  form.quotation_date = ''
-  form.items = [
-    { product_name: '', item_description: '', quantity: 1, unit_cost: 0 }
-  ]
-  form.errors = {}
-}
+
 
 function addItem() {
   form.items.push({ product_name: '', item_description: '', quantity: 1, unit_cost: 0 })
@@ -132,10 +127,7 @@ function removeItem(index: number) {
      toast.success('Item removed')
 }
 
-function openAddDrawer() {
-  initForm()
-  isAddOpen.value = true
-}
+
 
 function openEditDrawer(quotation: Quotation) {
   form.id = quotation.id
@@ -150,7 +142,7 @@ function openEditDrawer(quotation: Quotation) {
   isEditOpen.value = true
 }
 
-// Validate form
+// validation
 function validateForm() {
   form.errors = {}
   if (!form.quotation_date) {
@@ -164,38 +156,7 @@ function validateForm() {
   return Object.keys(form.errors).length === 0
 }
 
-// Add
-async function submitAdd() {
-  if (!validateForm()) return
-  form.processing = true
-  try {
-    await api.post(`/customers/${customerId.value}/quotations`, {
-      quotation_date: form.quotation_date,
-      customer_id: customerId.value,
-      total_items: totalItems.value,
-      grand_total: grandTotal.value,
-      items: form.items.map(i => ({
-        product_name: i.product_name,
-        item_description: i.item_description,
-        quantity: i.quantity,
-        price: i.unit_cost,
-      })),
-    })
-    toast.success('Quotation added')
-    await fetchCustomerAndQuotations()
-    isAddOpen.value = false
-  } catch (error: any) {
-    if (error.response?.data?.errors) {
-      form.errors = error.response.data.errors
-    } else {
-      toast.error('Failed to add quotation')
-    }
-  } finally {
-    form.processing = false
-  }
-}
-
-// Edit
+// edit
 async function submitEdit() {
   if (!validateForm()) return
   form.processing = true
@@ -213,6 +174,7 @@ async function submitEdit() {
     })
     toast.success('Quotation updated')
     isEditOpen.value = false
+    form.items = [{ product_name: '', item_description: '', quantity: 1, unit_cost: 0 }]
     await fetchCustomerAndQuotations()
   } catch (error: any) {
     if (error.response?.data?.errors) {
@@ -225,7 +187,7 @@ async function submitEdit() {
   }
 }
 
-// Delete
+// delete
 function deleteQuotation(id: number | string) {
   toast('Are you sure?', {
     position: 'top-center',
@@ -245,7 +207,7 @@ function deleteQuotation(id: number | string) {
   })
 }
 
-// Send email
+// send email
 const sendingEmail = ref<number | null>(null)
 function sendQuotationEmail(quotationId: number) {
   toast("Are you sure?", {
@@ -271,8 +233,6 @@ function sendQuotationEmail(quotationId: number) {
     }
   });
 }
-
-
 </script>
 
 
@@ -281,7 +241,12 @@ function sendQuotationEmail(quotationId: number) {
   <div class="max-w-4xl mx-auto p-4">
     <!-- Header -->
     <div class="flex justify-between items-center mb-4">
-      <h2 class="text-2xl font-semibold">Quotations of {{ customer?.name }}</h2>
+    <h2
+        class="text-2xl font-semibold"
+        @click="$router.push('/customers')"
+        >
+        Quotations of {{ customer?.name }}
+    </h2>
         <Button @click="isAddOpen = true">+ Add Quotation</Button>
     </div>
 
@@ -296,11 +261,10 @@ function sendQuotationEmail(quotationId: number) {
     </div>
 
     <!-- Customer Info -->
-    <!-- <div v-else class="mb-6">
+     <div v-else class="mb-6">
       <Card>
         <CardHeader>
           <CardTitle>Customer Information</CardTitle>
-          <CardDescription>Details for this customer</CardDescription>
         </CardHeader>
         <CardContent class="space-y-2">
           <p><span class="font-semibold">Name:</span> {{ customer?.name || 'N/A' }}</p>
@@ -309,7 +273,7 @@ function sendQuotationEmail(quotationId: number) {
           <p><span class="font-semibold">Contact Number:</span> {{ customer?.contact_number || 'N/A' }}</p>
         </CardContent>
       </Card>
-    </div> -->
+    </div>
 
     <!-- No quotations -->
     <div v-if="!loading && filteredQuotations.length === 0" class="text-gray-500 text-center py-8">
@@ -337,29 +301,28 @@ function sendQuotationEmail(quotationId: number) {
             <Button size="sm" :disabled="sendingEmail === quotation.id" @click="sendQuotationEmail(quotation.id)">
               <span v-if="sendingEmail === quotation.id" class="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
               <Send />
-              Send Email
-
+              Send via Email
             </Button>
           </div>
         </div>
 
         <div class="mb-2">
           <span class="font-semibold">Grand Total:</span>
-          ₱{{ quotation.grand_total.toFixed(2) }}
+          ₱{{ quotation.grand_total.toFixed(2) }} |
+          Total Items: {{ quotation.total_items }}
         </div>
 
         <div class="mb-2">
           <span class="font-semibold">Items:</span>
-          <table class="w-full table-auto border-collapse border border-gray-300 mt-2">
-            <thead>
-              <tr class="bg-gray-100">
-                <th class="border px-2 py-1">Product Name</th>
-                <th class="border px-2 py-1">Description</th>
-                <th class="border px-2 py-1">Quantity</th>
-                <th class="border px-2 py-1">Unit Cost</th>
-                <th class="border px-2 py-1">Total</th>
-              </tr>
-            </thead>
+          <Table class="w-full table-auto border-collapse border border-gray-300 mt-2">
+
+            <TableHeader>
+                <TableHead class="w-[20%]">Product</TableHead>
+                <TableHead class="w-[20%]">Description</TableHead>
+                <TableHead class="w-[20%]">Quantity</TableHead>
+                <TableHead class="w-[20%]">Unit Cost</TableHead>
+                <TableHead class="w-[20%]">Total</TableHead>
+            </TableHeader>
             <tbody>
               <tr v-for="(item, idx) in quotation.items" :key="idx">
                 <td class="border px-2 py-1">{{ item.product_name }}</td>
@@ -369,7 +332,7 @@ function sendQuotationEmail(quotationId: number) {
                 <td class="border px-2 py-1">₱{{ ((Number(item.quantity) || 0) * (Number(item.unit_cost) || 0)).toFixed(2) }}</td>
               </tr>
             </tbody>
-          </table>
+          </Table>
         </div>
       </div>
     </div>
@@ -380,6 +343,11 @@ function sendQuotationEmail(quotationId: number) {
     :customer-id="customerId"
     @saved="fetchCustomerAndQuotations"
     />
+<!--
+    <EditQuotation
+    v-model="isEditOpen"
+    :form="form"
+    /> -->
     <!-- Edit Quotation Drawer -->
      <Drawer v-model:open="isEditOpen">
         <DrawerContent class="flex flex-col max-h-screen">

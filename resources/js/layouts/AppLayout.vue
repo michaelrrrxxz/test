@@ -2,7 +2,7 @@
   <header class="border-b bg-white">
     <div class="container mx-auto flex items-center justify-between h-14 px-4">
       <!-- Logo / Brand -->
-      <RouterLink to="#" class="text-lg font-bold">
+      <RouterLink to="/" class="text-lg font-bold">
         AND I QUOTE
       </RouterLink>
 

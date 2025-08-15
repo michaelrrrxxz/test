@@ -187,16 +187,16 @@ function deleteCustomer(id: number | string) {
       </div>
     </div>
 
-<Table class="w-full table-fixed">
-  <TableHeader>
-    <TableRow>
-      <TableHead class="w-[20%]">Name</TableHead>
-      <TableHead class="w-[25%]">Email</TableHead>
-      <TableHead class="w-[25%]">Address</TableHead>
-      <TableHead class="w-[15%]">Contact</TableHead>
-      <TableHead class="w-[15%]">Actions</TableHead>
-    </TableRow>
-  </TableHeader>
+    <Table class="w-full table-fixed">
+    <TableHeader>
+        <TableRow>
+        <TableHead class="w-[20%]">Name</TableHead>
+        <TableHead class="w-[25%]">Email</TableHead>
+        <TableHead class="w-[25%]">Address</TableHead>
+        <TableHead class="w-[15%]">Contact</TableHead>
+        <TableHead class="w-[15%]">Actions</TableHead>
+        </TableRow>
+    </TableHeader>
 
   <!-- Skeleton loader -->
   <TableBody v-if="loading">
@@ -299,7 +299,7 @@ function deleteCustomer(id: number | string) {
       <Input
         id="add-address"
         v-model="addForm.address"
-        placeholder="Address"
+        placeholder="Address (optional)"
         :disabled="addForm.processing"
         :class="addForm.errors.address ? 'border-red-500 focus:border-red-500' : ''"
       />
@@ -314,7 +314,7 @@ function deleteCustomer(id: number | string) {
       <Input
         id="add-contact"
         v-model="addForm.contact_number"
-        placeholder="+1-555-9811-376"
+        placeholder="+632-1234-5678"
         :disabled="addForm.processing"
         required
         :class="addForm.errors.contact_number ? 'border-red-500 focus:border-red-500' : ''"
@@ -368,13 +368,13 @@ function deleteCustomer(id: number | string) {
 
           <div>
             <Label for="edit-address">Address</Label>
-            <Input id="edit-address" v-model="editForm.address" placeholder="Address" :disabled="editForm.processing" />
+            <Input id="edit-address" v-model="editForm.address" placeholder="Address(optional)" :disabled="editForm.processing" />
             <p v-if="editForm.errors.address" class="text-sm text-red-600">{{ editForm.errors.address }}</p>
           </div>
 
           <div>
             <Label for="edit-contact">Contact Number</Label>
-            <Input id="edit-contact" v-model="editForm.contact_number" placeholder="+1-555-9811-376"
+            <Input id="edit-contact" v-model="editForm.contact_number" placeholder="+632-1234-5678"
               :disabled="editForm.processing" required />
             <p v-if="editForm.errors.contact_number" class="text-sm text-red-600">{{ editForm.errors.contact_number }}
             </p>

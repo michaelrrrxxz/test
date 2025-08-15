@@ -31,7 +31,7 @@ class UpdateQuotationRequest extends FormRequest
 
         // Validate each item inside the array
         'items.*.product_name' => 'required|string|max:255',
-        'items.*.item_description' => 'string',
+        'items.*.item_description' => 'string|nullable|max:1000',
         'items.*.quantity' => 'required|integer|min:1',
         'items.*.price' => 'required|numeric|min:0',
     ];

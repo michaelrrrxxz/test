@@ -12,6 +12,7 @@
           <Input
             id="quotation_date"
             type="date"
+            range="today"
             v-model="form.quotation_date"
             :disabled="form.processing"
           />
@@ -138,6 +139,7 @@ const form = reactive({
   items: [{ product_name: '', item_description: '', quantity: 1, unit_cost: 0 }],
   errors: {} as Record<string, any>,
   processing: false
+
 })
 
 const totalItems = computed(() => form.items.length)
@@ -152,6 +154,7 @@ function addItem() {
 
 function removeItem(index: number) {
   if (form.items.length > 1) form.items.splice(index, 1)
+    toast.success('Item removed')
 }
 
 function validateForm() {
@@ -179,6 +182,8 @@ async function submitAdd() {
     toast.success('Quotation added')
     emit('saved')
     isOpen.value = false
+    form.quotation_date = ''
+    form.items = [{ product_name: '', item_description: '', quantity: 1, unit_cost: 0 }]
   } catch (error: any) {
     if (error.response?.data?.errors) {
       form.errors = error.response.data.errors

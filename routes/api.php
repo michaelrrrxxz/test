@@ -10,9 +10,9 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 Route::prefix('v1')->group(function () {
-    Route::apiResource('customers', CustomerController::class);
-    Route::apiResource('quotations', QuotationController::class);
-    
+    Route::apiResource('customers', CustomerController::class)->only(['index','store','show','edit','update','destroy']);
+    Route::apiResource('quotations', QuotationController::class)->only('store', 'update', 'destroy');
+
     Route::get('customers/{customer}/quotations', [QuotationController::class, 'byCustomer']);
     Route::post('customers/{customer}/quotations', [QuotationController::class, 'store']);
     Route::post('quotations/{quotation}/send-email', [QuotationController::class, 'sendEmail'
