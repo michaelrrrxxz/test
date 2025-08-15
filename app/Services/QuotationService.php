@@ -25,7 +25,7 @@ class QuotationService
                 'total_items'   => 0,
             ]);
 
-            [$grandTotal, $totalItems] = $this->syncItems($quotation, $data['items']);
+            [$grandTotal, $totalItems] = $this->Items($quotation, $data['items']);
 
             $quotation->update([
                 'grand_total' => $grandTotal,
@@ -45,7 +45,7 @@ class QuotationService
 
             $quotation->items()->delete();
 
-            [$grandTotal, $totalItems] = $this->syncItems($quotation, $data['items']);
+            [$grandTotal, $totalItems] = $this->Items($quotation, $data['items']);
 
             $quotation->update([
                 'grand_total' => $grandTotal,
@@ -107,7 +107,7 @@ class QuotationService
             ];
         }
 
-    protected function syncItems(Quotation $quotation, array $items): array
+    protected function Items(Quotation $quotation, array $items): array
     {
         $grandTotal = 0;
         $totalItems = 0;

@@ -102,7 +102,7 @@
 
         <!-- Action buttons -->
         <div class="flex justify-end space-x-2">
-            <Button variant="outline" @click="isOpen = false">Cancel</Button>
+            <Button variant="outline" @click="resetForm">Cancel</Button>
             <Button type="submit" form="addQuotationForm" :disabled="form.processing">Save</Button>
         </div>
     </div>
@@ -141,6 +141,13 @@ const form = reactive({
   processing: false
 
 })
+function resetForm() {
+  form.quotation_date = '';
+  form.items = [{ product_name: '', item_description: '', quantity: 1, unit_cost: 0 }];
+  form.errors = {};
+  isOpen.value = false;
+  form.processing = false;
+}
 
 const totalItems = computed(() => form.items.length)
 const grandTotal = computed(() =>
