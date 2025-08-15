@@ -1,61 +1,96 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# And I Qoute
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Laravel + Vue.js Project
 
-## About Laravel
+A modern web application built with Laravel backend and Vue.js frontend.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 🛠️ Tech Used
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+**Backend:**
+- Laravel 12
+- PHP 8.2+
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+**Frontend:**
+- Vue 3 (via Vite)
+- Tailwind CSS
+- ShadCN UI Components
 
-## Learning Laravel
+**Development Tools:**
+- Axios (HTTP client)
+- Postman (API testing)
+- Chrome Dev Tools
+- Vue Dev Tools (Chrome Extension)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 🚀 Prerequisites
 
-## Laravel Sponsors
+- [Node.js](https://nodejs.org/) (v22.x or higher recommended)
+- [Composer](https://getcomposer.org/) (for PHP dependencies)
+- PHP (v8.2 or higher)
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
 
-### Premium Partners
+## ⚙️ Installation
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/michaelrrrxxz/test.git
+   cd test
 
-## Contributing
+2. **Install PHP dependencies**
+    ```bash
+    composer install
+    ```
+3. **Install Node.js dependencies**
+    ```
+    npm install
+    ```
+4. **Copy the .env.example and rename it to .env**
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+5. **generate key (if needed)**
+    ```
+    php artisan key:generate
+    ```
+## ⚡ Running the Application
 
-## Code of Conduct
+```
+npm run start
+```
+** This will run application at: **
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Frontend: http://localhost:5174/
 
-## Security Vulnerabilities
+Backend: http://127.0.0.1:8000/
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+📂 Project Structure
+<pre style="font-family: monospace; line-height: 1.5; padding: 15px; border-radius: 5px;">
+project-root/
+├── <strong>app/</strong>               # Laravel application core
+├── <strong>resources/</strong>
+│   └── <strong>js/</strong>            # Vue.js
+│   └── <strong>views/welcome</strong>  #Entry Point
+├── <strong>routes/api</strong>         # Application routes
+├── <strong>vendor/</strong>            # Composer dependencies
+└── <strong>node_modules/</strong>      # NPM dependencies
+</pre>
 
-## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## API's
+
+```http
+# Customer Routes
+GET|HEAD   api/v1/customers                   customers.index › Api\CustomerController@index
+POST       api/v1/customers                   customers.store › Api\CustomerController@store
+GET|HEAD   api/v1/customers/{customer}        customers.show › Api\CustomerController@show
+PUT|PATCH  api/v1/customers/{customer}        customers.update › Api\CustomerController@update
+DELETE     api/v1/customers/{customer}        customers.destroy › Api\CustomerController@destroy
+GET|HEAD   api/v1/customers/{customer}/edit   customers.edit › Api\CustomerController@edit
+
+# Quotation Routes
+GET|HEAD   api/v1/customers/{customer}/quotations  Api\QuotationController@byCustomer
+POST       api/v1/customers/{customer}/quotations  Api\QuotationController@store
+PUT|PATCH  api/v1/quotations/{quotation}      quotations.update › Api\QuotationController@update
+DELETE     api/v1/quotations/{quotation}      quotations.destroy › Api\QuotationController@destroy
+POST       api/v1/quotations/{quotation}/send-email  Api\QuotationController@sendEmail
+
+```
